@@ -1,0 +1,52 @@
+.dashboard {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #262424; /* Background color for entire page */
+  }
+  
+  .content {
+    flex-grow: 1;
+    padding: 2rem; /* Adequate padding around content */
+    background-color: #dfdcdc; /* Dark background for content */
+    color: #211d1d; /* White text for contrast */
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .sidebarOpen {
+    margin-left: 250px; /* Adjust when sidebar is open */
+    width: calc(100% - 250px); /* Reduce content width when sidebar is open */
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: #ffffff; /* Headings should be white for visibility */
+  }
+  
+  p {
+    color: #b0bec5; /* Lighter gray for paragraph text for better readability */
+    line-height: 1.6; /* Line spacing for better readability */
+  }
+  
+  a {
+    color: #ff5722; /* Accent color for links */
+    text-decoration: none; /* Remove underline */
+    transition: color 0.3s ease;
+  }
+  
+  a:hover {
+    color: #ffffff; /* Change color when hovering */
+  }
+  
+  /* Responsive for smaller screens */
+  @media (max-width: 768px) {
+    .content {
+      margin-left: 0;
+      width: 100%;
+    }
+    .sidebarOpen {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+  

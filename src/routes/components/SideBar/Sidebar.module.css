@@ -1,0 +1,39 @@
+.sidebarLink {
+    position: relative;
+    overflow: hidden;
+    color: #b0bec5; /* Default text color */
+    text-decoration: none; /* Remove underline */
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    gap: 10px; /* Space between icon and text */
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  .sidebarLink:hover,
+  .sidebarLink.active {
+    background-color: #4caf50; /* Hover/Active background */
+    color: #ffffff; /* Hover/Active text color */
+  }
+  
+  .sidebarLink:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -15px; /* Initially off-screen */
+    margin: auto;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 20px 0 20px 20px; /* Triangle dimensions */
+    border-color: transparent transparent transparent #4caf50; /* Triangle color */
+    transition: right 0.3s ease-in-out;
+  }
+  
+  .sidebarLink:hover:after,
+  .sidebarLink.active:after {
+    right: 0; /* Triangle aligns with link */
+  }
+  
