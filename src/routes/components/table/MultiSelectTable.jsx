@@ -55,18 +55,18 @@ const MultiSelectTable = (props) => {
     supervisorSsn: "",
   });
 
-  const availableCategories = ["ALL", "dnum", "dname", "supervisorSsn", "employeeName", "projectName", "supervisorName"];
-
+  
   const handleOpenDropdown = (event) => {
     setAnchorEl(event.currentTarget);
     setOpen(true);
   };
-
+  
   const handleCloseDropdown = () => {
     setAnchorEl(null);
     setOpen(false);
   };
-
+  
+  const availableCategories = ["ALL", "dnum", "dname", "supervisorSsn", "employeeName", "projectName", "supervisorName"];
   const handleCategoryChange = (event) => {
     const value = event.target.value;
     setSearchCategories(value);
@@ -469,17 +469,16 @@ const MultiSelectTable = (props) => {
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
-        rowsPerPageOptions={[5, 10, 15]}
-        component="div"
-        count={props.data.totalPages * props.data.page_size}
-        rowsPerPage={props.data.page_size}
-        page={props.data.page_number}
-        onPageChange={(event, newPage) => props.onPageChange(newPage)}
-        onRowsPerPageChange={(event) => props.onRowsPerPageChange(parseInt(event.target.value, 10))}
-        sx={{ mt: 2 }}
-      />
+      rowsPerPageOptions={[5, 10, 15]}
+      component="div"
+      count={props.data.totalPages * (props.data.page_size || 10)} // Fallback to 10 if page_size is undefined
+      rowsPerPage={props.data.page_size || 10} // Fallback to 10 if page_size is undefined
+      page={props.data.page_number || 0} // Fallback to 0 if page_number is undefined
+      onPageChange={(event, newPage) => props.onPageChange(newPage)}
+      onRowsPerPageChange={(event) => props.onRowsPerPageChange(parseInt(event.target.value, 10))}
+      sx={{ mt: 2 }}
+    />
 
       {/* Add/Edit Department Modal */}
       <Dialog

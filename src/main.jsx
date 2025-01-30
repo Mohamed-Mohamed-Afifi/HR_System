@@ -6,16 +6,18 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import { Dashboard } from './routes/pages/Dashboard/Dashboard.jsx';
+// import  Dashboard from './routes/pages/Dashboard/Dashboard.jsx';
 import { DashLayout } from './routes/pages/Layout/DashLayout.jsx';
 import ErrorPage from './routes/pages/Errors/ErrorPage.jsx';
 import { Department } from './routes/pages/Departments/Department.jsx';
 import  LoginLayout  from './routes/pages/Layout/LoginLayout.jsx';
 import  Login  from './routes/pages/User/Login.jsx';
-import Employee from './routes/pages/Employees/Employee.jsx';
+import {Employee} from './routes/pages/Employees/Employee.jsx';
 import Project from './routes/pages/Projects/Project.jsx';
-import Dependent from './routes/pages/Dependents/Dependent.jsx';
+import {Dependent} from './routes/pages/Dependents/Dependent.jsx';
 import { store } from './Store.jsx';
+import Profile from './routes/pages/Profile/Profile.jsx';
+import Dashboards from './routes/pages/Dashboard/Dashboards.jsx';
 const routes=createBrowserRouter([
     {
         path:"/",
@@ -24,7 +26,7 @@ const routes=createBrowserRouter([
         children:[
             {
                 index:true,
-                element:<Dashboard/>
+                element:<Dashboards/>
             },
             {
                 path:"departments",
@@ -41,6 +43,10 @@ const routes=createBrowserRouter([
             {
                 path:"dependents",
                 element:<Dependent/>
+            },
+            {
+                path:"/profile",    
+                element:<Profile/>
             },
         ],
     },

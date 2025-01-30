@@ -18,7 +18,6 @@ export const departSlice=createSlice({
         .addCase(getAllDepartments.rejected, (state,action) => {
             state.loading = false;
             state.err=true;
-            state.errormsg = action.payload.massage;
           })
         .addCase(filterDepartment.pending,(state)=>{
           state.loading = true;
@@ -32,7 +31,6 @@ export const departSlice=createSlice({
         .addCase(filterDepartment.rejected, (state,action) => {
           state.loading = false;
           state.err=true;
-          state.errormsg = action.payload.massage;
         })
         },
         

@@ -1,0 +1,95 @@
+.profileContainer {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profileHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profileHeader h1 {
+  font-size: 2rem;
+  color: #333;
+}
+
+.profileContent {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.infoLabel {
+  font-weight: bold;
+  color: #555;
+}
+
+.infoValue {
+  color: #333;
+}
+
+.infoInput {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 60%;
+}
+
+.profileActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.editButton,
+.saveButton,
+.changePasswordButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.editButton {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+.saveButton {
+  background-color: #2196f3;
+  color: #fff;
+}
+
+.changePasswordButton {
+  background-color: #ff9800;
+  color: #fff;
+}
+
+.editButton:hover,
+.saveButton:hover,
+.changePasswordButton:hover {
+  opacity: 0.9;
+}

@@ -8,20 +8,18 @@ const api = axios.create({
   },
 });
 
-// Fetch all employees with pagination
-export const getAllEmployees = createAsyncThunk(
-  "employee/getAllEmployees",
+// Fetch all dependents with pagination
+export const getAllDependents = createAsyncThunk(
+  "dependent/getAllDependents",
   async (pageData, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
 
-      // Validate pageData
       if (!pageData || typeof pageData.pageNum !== "number" || typeof pageData.pageSize !== "number") {
         throw new Error("Invalid pageData provided");
       }
 
-      // Make the API request
-      const response = await api.get("/employees", {
+      const response = await api.get("/dependents", {
         params: {
             pageNum: pageData.pageNum,
             pageSize: pageData.pageSize,
@@ -31,28 +29,24 @@ export const getAllEmployees = createAsyncThunk(
         },
       });
 
-      // Return the data
       return response.data;
     } catch (error) {
-      // Handle errors
-      console.error("Error fetching employees:", error);
-
-      // Reject with error message
+      console.error("Error fetching dependents:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch employees"
+        error.response?.data?.message || "Failed to fetch dependents"
       );
     }
   }
 );
 
-// Add a new employee
-export const addNewEmployee = createAsyncThunk(
-  "employee/addEmployee",
-  async (employee, thunkAPI) => {
+// Add a new dependent
+export const addNewDependent = createAsyncThunk(
+  "dependent/addDependent",
+  async (dependent, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
 
-      const response = await api.post("/employees", employee, {
+      const response = await api.post("/dependents", dependent, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -60,22 +54,22 @@ export const addNewEmployee = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.error("Error adding employee:", error);
+      console.error("Error adding dependent:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to add employee"
+        error.response?.data?.message || "Failed to add dependent"
       );
     }
   }
 );
 
-// Update an existing employee
-export const updateEmployee = createAsyncThunk(
-  "employee/updateEmployee",
-  async (employee, thunkAPI) => {
+// Update an existing dependent
+export const updateDependent = createAsyncThunk(
+  "dependent/updateDependent",
+  async (dependent, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
 
-      const response = await api.put("/employees", employee, {
+      const response = await api.put("/dependents", dependent, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -83,22 +77,22 @@ export const updateEmployee = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.error("Error updating employee:", error);
+      console.error("Error updating dependent:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to update employee"
+        error.response?.data?.message || "Failed to update dependent"
       );
     }
   }
 );
 
-// Delete an employee
-export const deleteEmployee = createAsyncThunk(
-  "employee/deleteEmployee",
-  async (employeeId, thunkAPI) => {
+// Delete a dependent
+export const deleteDependent = createAsyncThunk(
+  "dependent/deleteDependent",
+  async (dependentId, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
 
-      const response = await api.delete(`/employees/${employeeId}`, {
+      const response = await api.delete(`/dependents/${dependentId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -106,22 +100,22 @@ export const deleteEmployee = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.error("Error deleting employee:", error);
+      console.error("Error deleting dependent:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to delete employee"
+        error.response?.data?.message || "Failed to delete dependent"
       );
     }
   }
 );
 
-// Filter employees based on search criteria
-export const filterEmployee = createAsyncThunk(
-  "employee/filterEmployee",
+// Filter dependents based on search criteria
+export const filterDependent = createAsyncThunk(
+  "dependent/filterDependent",
   async (criteria, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
 
-      const response = await api.post("/employees/search", criteria, {
+      const response = await api.post("/dependents/search", criteria, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -129,9 +123,9 @@ export const filterEmployee = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.error("Error filtering employees:", error);
+      console.error("Error filtering dependents:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to filter employees"
+        error.response?.data?.message || "Failed to filter dependents"
       );
     }
   }

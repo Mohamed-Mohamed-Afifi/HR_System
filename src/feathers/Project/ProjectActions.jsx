@@ -8,9 +8,9 @@ const api = axios.create({
   },
 });
 
-// Fetch all employees with pagination
-export const getAllEmployees = createAsyncThunk(
-  "employee/getAllEmployees",
+// Fetch all projects with pagination
+export const getAllProjects = createAsyncThunk(
+  "project/getAllProjects",
   async (pageData, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
@@ -21,7 +21,7 @@ export const getAllEmployees = createAsyncThunk(
       }
 
       // Make the API request
-      const response = await api.get("/employees", {
+      const response = await api.get("/projects", {
         params: {
             pageNum: pageData.pageNum,
             pageSize: pageData.pageSize,
@@ -31,107 +31,96 @@ export const getAllEmployees = createAsyncThunk(
         },
       });
 
-      // Return the data
       return response.data;
     } catch (error) {
-      // Handle errors
-      console.error("Error fetching employees:", error);
-
-      // Reject with error message
+      console.error("Error fetching projects:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch employees"
+        error.response?.data?.message || "Failed to fetch projects"
       );
     }
   }
 );
 
-// Add a new employee
-export const addNewEmployee = createAsyncThunk(
-  "employee/addEmployee",
-  async (employee, thunkAPI) => {
+// Add a new project
+export const addNewProject = createAsyncThunk(
+  "project/addProject",
+  async (project, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
-
-      const response = await api.post("/employees", employee, {
+      const response = await api.post("/projects", project, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       return response.data;
     } catch (error) {
-      console.error("Error adding employee:", error);
+      console.error("Error adding project:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to add employee"
+        error.response?.data?.message || "Failed to add project"
       );
     }
   }
 );
 
-// Update an existing employee
-export const updateEmployee = createAsyncThunk(
-  "employee/updateEmployee",
-  async (employee, thunkAPI) => {
+// Update an existing project
+export const updateProject = createAsyncThunk(
+  "project/updateProject",
+  async (project, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
-
-      const response = await api.put("/employees", employee, {
+      const response = await api.put("/projects", project, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       return response.data;
     } catch (error) {
-      console.error("Error updating employee:", error);
+      console.error("Error updating project:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to update employee"
+        error.response?.data?.message || "Failed to update project"
       );
     }
   }
 );
 
-// Delete an employee
-export const deleteEmployee = createAsyncThunk(
-  "employee/deleteEmployee",
-  async (employeeId, thunkAPI) => {
+// Delete a project
+export const deleteProject = createAsyncThunk(
+  "project/deleteProject",
+  async (projectId, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.userToken;
-
-      const response = await api.delete(`/employees/${employeeId}`, {
+      const response = await api.delete(`/projects/${projectId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       return response.data;
     } catch (error) {
-      console.error("Error deleting employee:", error);
+      console.error("Error deleting project:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to delete employee"
+        error.response?.data?.message || "Failed to delete project"
       );
     }
   }
 );
 
-// Filter employees based on search criteria
-export const filterEmployee = createAsyncThunk(
-  "employee/filterEmployee",
+// Filter projects based on search criteria
+export const filterProject = createAsyncThunk(
+  "project/filterProject",
   async (criteria, thunkAPI) => {
+    console.log(criteria, "criteria from redux"); // Debugging
     try {
       const token = thunkAPI.getState().auth.userToken;
-
-      const response = await api.post("/employees/search", criteria, {
+      const response = await api.post("/projects/search", criteria, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       return response.data;
     } catch (error) {
-      console.error("Error filtering employees:", error);
+      console.error("Error filtering projects:", error);
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to filter employees"
+        error.response?.data?.message || "Failed to filter projects"
       );
     }
   }
