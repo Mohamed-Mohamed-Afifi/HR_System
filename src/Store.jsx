@@ -6,6 +6,7 @@ import changePasswordSlice from "../src/feathers/ChangePassword/ChangePassSlice"
 import employeeSlice  from "./feathers/Employee/EmployeeSlice";
 import projectSlice from "./feathers/Project/ProjectSlice";
 import dependentSlice from "./feathers/Dependents/DependentSlice"; 
+import userSlice from "./feathers/Users/UserSlice";
 export const store=configureStore({
     reducer:{
         dept:departSlice,
@@ -15,5 +16,6 @@ export const store=configureStore({
         emp:employeeSlice,
         project:projectSlice,
         dependent:dependentSlice,
+        users:userSlice
     }
 })

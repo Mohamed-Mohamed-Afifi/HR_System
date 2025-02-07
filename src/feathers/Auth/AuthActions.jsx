@@ -16,6 +16,7 @@ export const checkAuth = createAsyncThunk(
         localStorage.setItem("fullName", response.data.user.fullName);
         localStorage.setItem("email", response.data.user.email);
         localStorage.setItem("role", response.data.user.role);
+        localStorage.setItem("userId", response.data.user.id);
         console.log(response.data,"from response");
         return response.data;
       } catch (error) {

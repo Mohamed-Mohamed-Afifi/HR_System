@@ -66,7 +66,7 @@ export const DashLayout = () => {
   };
 
   const handleCloseMenu = () => {
-    navigate("/profile");
+    // navigate("/profile");
     setAnchorEl(null);
   };
 

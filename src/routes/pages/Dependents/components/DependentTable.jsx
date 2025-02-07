@@ -33,7 +33,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { 
   addNewDependent, 
   deleteDependent, 
@@ -44,7 +44,9 @@ import Swal from "sweetalert2";
 
 const DependentTable = (props) => {
   const dispatch = useDispatch();
-
+  const loading = useSelector((state) => state.dependent.loading);
+  const error = useSelector((state) => state.dependent.error);
+  const success = useSelector((state) => state.dependent.success);
   const [selected, setSelected] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategories, setSearchCategories] = useState(["ALL"]);
@@ -135,21 +137,7 @@ const DependentTable = (props) => {
     }));
   };
 
-  const validateDependent = () => {
-    const errors = [];
-    if (!newDependent.employeeSsn) errors.push("Employee SSN is required");
-    if (!newDependent.dependentName) errors.push("Dependent name is required");
-    if (!newDependent.bdate) errors.push("Birthdate is required");
-    return errors;
-  };
-
   const handleSubmit = () => {
-    const errors = validateDependent();
-    if (errors.length > 0) {
-      Swal.fire("Validation Error", errors.join("\n"), "error");
-      return;
-    }
-
     const dependentData = {
       ...newDependent,
       employeeSsn: parseInt(newDependent.employeeSsn, 10),
@@ -161,7 +149,7 @@ const DependentTable = (props) => {
       .then(() => {
         Swal.fire("Success", `Dependent ${isEditMode ? 'updated' : 'added'}!`, "success");
         handleCloseModal();
-        props.onUpdateDependents();
+        handleSearchSubmit();
       })
       .catch(error => {
         Swal.fire("Error", error.message || "Operation failed", "error");
@@ -177,7 +165,7 @@ const DependentTable = (props) => {
     }).then((result) => {
       if (result.isConfirmed) {
         dispatch(deleteDependent({ employeeSsn, dependentName }))
-          .then(() => props.onDeleteDependent(employeeSsn, dependentName))
+          .then(() => handleSearchSubmit())
           .catch(error => Swal.fire("Error", error.message, "error"));
       }
     });
@@ -193,6 +181,7 @@ const DependentTable = (props) => {
     });
     setIsEditMode(false);
   };
+
 
   return (
     <Card elevation={3} sx={{ borderRadius: "16px", padding: "1.5rem", backgroundColor: "#f9f9fb" }}>

@@ -9,6 +9,7 @@
     flex-grow: 1;
     padding: 2rem; /* Adequate padding around content */
     background-color: #dfdcdc; /* Dark background for content */
+    background: radial-gradient(circle at top right, #f5faf6 0%, #e8f5e9 100%);
     color: #211d1d; /* White text for contrast */
     transition: margin-left 0.3s ease, width 0.3s ease;
     font-family: 'Poppins', sans-serif;

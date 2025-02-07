@@ -1,39 +1,134 @@
-.sidebarLink {
-    position: relative;
-    overflow: hidden;
-    color: #b0bec5; /* Default text color */
-    text-decoration: none; /* Remove underline */
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    width: 100%;
-    gap: 10px; /* Space between icon and text */
-    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+.sidebar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  width: 250px !important;
+}
+
+.sidebar .MuiDrawer-paper {
+  transition: all 0.3s ease !important;
+  overflow-x: hidden !important;
+  
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  margin-bottom: 1rem;
+}
+
+.logo {
+  color: #1f2937 !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 1.2rem !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menuItem {
+  margin: 8px 16px !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  color: #1f2937 !important;
+  position: relative;
+
+}
+
+.menuItem:hover {
+  background: rgba(58, 237, 150, 0.1) !important;
+  transform: translateX(8px) !important;
+}
+
+.activeMenuItem {
+  background: linear-gradient(
+    135deg,
+    rgba(58, 237, 150, 0.2) 0%,
+    rgba(37, 113, 167, 0.2) 100%
+  ) !important;
+  border-left: 4px solid #3aed96 !important;
+}
+
+.icon {
+  color: #1f2937 !important;
+  min-width: 40px !important;
+  justify-content: center !important;
+}
+
+.menuText {
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+}
+
+.hamburger {
+  padding: 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease !important;
+}
+
+.hamburger:hover {
+  background: rgba(58, 237, 150, 0.1) !important;
+}
+
+.hamburgerBar {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background: #1f2937;
+  margin: 4px 0;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active .hamburgerBar:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger.active .hamburgerBar:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active .hamburgerBar:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+.chatContainer {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.chatButton {
+  background: linear-gradient(135deg, #3aed96 0%, #2571a7 100%) !important;
+  color: white !important;
+  padding: 1rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.chatButton:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.chatIcon {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 80vw !important;
+    background: rgba(255, 255, 255, 0.95) !important;
   }
   
-  .sidebarLink:hover,
-  .sidebarLink.active {
-    background-color: #4caf50; /* Hover/Active background */
-    color: #ffffff; /* Hover/Active text color */
+  .menuItem {
+    margin: 8px !important;
   }
   
-  .sidebarLink:after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: -15px; /* Initially off-screen */
-    margin: auto;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 20px 0 20px 20px; /* Triangle dimensions */
-    border-color: transparent transparent transparent #4caf50; /* Triangle color */
-    transition: right 0.3s ease-in-out;
+  .logo {
+    font-size: 1rem !important;
   }
-  
-  .sidebarLink:hover:after,
-  .sidebarLink.active:after {
-    right: 0; /* Triangle aligns with link */
-  }
-  
+}

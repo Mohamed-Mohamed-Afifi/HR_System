@@ -1,0 +1,69 @@
+:root {
+  --primary-gradient: linear-gradient(135deg, #3aed96 0%, #2571a7 100%);
+  --secondary-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  --accent-color: #3aed96;
+  --text-dark: #1a202c;
+  --text-secondary: #718096;
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Enhanced Glass Effect */
+.MuiDrawer-paper {
+  background-size: 200% 200% !important;
+  animation: gradient-shift 15s ease infinite !important;
+}
+
+/* Hover Spotlight Effect */
+.MuiListItem-button:hover {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, 
+      rgba(58, 237, 150, 0.08) 0%, 
+      transparent 70%);
+    pointer-events: none;
+  }
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  &-track {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  &-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    &:hover {
+      background: rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  .MuiDrawer-paper {
+    backdrop-filter: blur(24px) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .MuiListItem-button {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    &::after {
+      right: 4px !important;
+    }
+  }
+}

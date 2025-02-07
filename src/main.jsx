@@ -18,6 +18,8 @@ import {Dependent} from './routes/pages/Dependents/Dependent.jsx';
 import { store } from './Store.jsx';
 import Profile from './routes/pages/Profile/Profile.jsx';
 import Dashboards from './routes/pages/Dashboard/Dashboards.jsx';
+import { Log } from './routes/pages/User/Log.jsx';
+import { motion, AnimatePresence } from 'framer-motion';
 const routes=createBrowserRouter([
     {
         path:"/",
@@ -57,7 +59,7 @@ const routes=createBrowserRouter([
         children:[
             {
                 path:"login",
-                element:<Login/>
+                element:<Log/>
             }
         ]
     }

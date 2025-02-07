@@ -9,216 +9,224 @@ import {
   ListItemText,
   Box,
   Typography,
-  ThemeProvider,
   useMediaQuery,
 } from "@mui/material";
-import { FaHome, FaUsers, FaProjectDiagram, FaBuilding } from "react-icons/fa";
-import { MdChildCare } from "react-icons/md";
-import { FaComments } from "react-icons/fa"; // Import chat icon
+import { 
+  HiHomeModern, 
+  HiBuildingOffice, 
+  HiUserGroup,
+  HiChartPie,
+  HiHeart,
+  HiChatBubbleLeftRight,
+  HiChevronDoubleLeft,
+  HiChevronDoubleRight
+} from "react-icons/hi2";
+import { motion, AnimatePresence } from "framer-motion";
 import theme from "./theme";
+import "./side.css";
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true); // Manage sidebar open/close state
-  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false); // Manage hamburger open/close state
-  const isMobile = useMediaQuery("(max-width:768px)"); // Detect screen size
-
-  const toggleDrawer = () => {
-    setIsOpen(!isOpen);
-    setIsHamburgerOpen(!isHamburgerOpen); // Toggle hamburger state on drawer open/close
-  };
+  const [isOpen, setIsOpen] = useState(true);
+  const isMobile = useMediaQuery("(max-width:768px)");
+  const iconSize = 22;
 
   const menuItems = [
-    { text: "Dashboard", icon: <FaHome />, path: "/" },
-    { text: "Departments", icon: <FaBuilding />, path: "/departments" },
-    { text: "Employees", icon: <FaUsers />, path: "/employees" },
-    { text: "Projects", icon: <FaProjectDiagram />, path: "/projects" },
-    { text: "Dependents", icon: <MdChildCare />, path: "/dependents" },
+    { text: "Dashboard", icon: <HiHomeModern size={iconSize} />, path: "/" },
+    { text: "Departments", icon: <HiBuildingOffice size={iconSize} />, path: "/departments" },
+    { text: "Employees", icon: <HiUserGroup size={iconSize} />, path: "/employees" },
+    { text: "Projects", icon: <HiChartPie size={iconSize} />, path: "/projects" },
+    { text: "Dependents", icon: <HiHeart size={iconSize} />, path: "/dependents" },
   ];
 
   return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ display: "flex" }}>
-        {/* Sidebar Drawer */}
-        <Drawer
-          variant={isMobile ? "temporary" : "persistent"}
-          anchor="left"
-          open={isMobile ? isOpen : true} // Always open in desktop mode
-          onClose={isMobile ? toggleDrawer : undefined} // Close drawer only in mobile
-          sx={{
-            width: isOpen ? 250 : 60,
-            flexShrink: 0,
-            "& .MuiDrawer-paper": {
-              width: isOpen ? 250 : 60,
-              backgroundColor: "#388e3c",
-              color: "#ffffff",
-              borderRight: "none",
-              overflowX: "hidden", // Prevent content overflow
-              transition: "width 0.3s ease",
-            },
-          }}
-        >
-          {/* Header Section */}
-          <Box
+    <Drawer
+    variant="permanent"
+    sx={{
+      width: isOpen ? 280 : 80,
+      flexShrink: 0,
+      '& .MuiDrawer-paper': {
+        position: 'relative',
+        width: isOpen ? 280 : 80,
+        height: '100%',
+        background: `
+          linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(245, 247, 250, 0.95) 100%
+          )
+        `,
+        backdropFilter: 'blur(16px)',
+        borderRight: '1px solid rgba(136, 152, 170, 0.1)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.11)',
+      },
+    }}
+  >
+      {/* Header Section */}
+      <Box sx={{ 
+        p: 3, 
+        position: 'relative',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          bottom: 0,
+          left: 24,
+          right: 24,
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08), transparent)'
+        }
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <Typography variant="h6" sx={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 700,
+                  letterSpacing: '-0.5px',
+                  color: 'var(--text-dark)',
+                  background: 'linear-gradient(135deg, #3aed96 0%, #2571a7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  HR System
+                </Typography>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <IconButton
+            onClick={() => setIsOpen(!isOpen)}
             sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: isOpen ? "space-between" : "center",
-              padding: "1rem",
-              borderBottom: "1px solid rgb(246, 246, 246)",
+              background: 'rgba(58, 237, 150, 0.1)',
+              '&:hover': { background: 'rgba(58, 237, 150, 0.2)' }
             }}
           >
+            {isOpen ? (
+              <HiChevronDoubleLeft className="text-[var(--accent-color)]" />
+            ) : (
+              <HiChevronDoubleRight className="text-[var(--accent-color)]" />
+            )}
+          </IconButton>
+        </Box>
+      </Box>
+
+      {/* Menu Items */}
+      <List sx={{ px: 2, mt: 1 }}>
+        {menuItems.map((item) => (
+          <ListItem
+            key={item.path}
+            component={NavLink}
+            to={item.path}
+            sx={{
+              borderRadius: '12px',
+              mb: 1,
+              px: 2,
+              transition: 'all 0.3s ease',
+              '&.active': {
+                background: 'rgba(58, 237, 150, 0.1)',
+                boxShadow: '0 4px 6px -1px rgba(58, 237, 150, 0.1)',
+                '& .MuiListItemIcon-root': {
+                  color: 'var(--accent-color)'
+                },
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: 'var(--accent-color)',
+                  boxShadow: '0 0 12px var(--accent-color)'
+                }
+              },
+              '&:hover': {
+                transform: 'translateX(8px)',
+                '& .MuiListItemIcon-root': {
+                  transform: 'scale(1.1)'
+                }
+              }
+            }}
+          >
+            <ListItemIcon sx={{ 
+              minWidth: 40,
+              color: 'var(--text-secondary)',
+              transition: 'all 0.3s ease' 
+            }}>
+              {item.icon}
+            </ListItemIcon>
+            
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <ListItemText
+                    primary={item.text}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 500,
+                        color: 'var(--text-dark)',
+                        fontSize: '0.95rem',
+                        letterSpacing: '-0.2px'
+                      }
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </ListItem>
+        ))}
+      </List>
+
+      {/* Chat Section */}
+      <Box sx={{ 
+        position: 'absolute', 
+        bottom: 24, 
+        left: '50%', 
+        transform: 'translateX(-50%)',
+        width: 'calc(100% - 48px)'
+      }}>
+        <motion.div whileHover={{ scale: 1.02 }}>
+          <IconButton
+            sx={{
+              width: '100%',
+              borderRadius: '14px',
+              background: 'var(--primary-gradient)',
+              color: '#fff',
+              py: 1.5,
+              boxShadow: '0 4px 6px -1px rgba(58, 237, 150, 0.2)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: '0 8px 12px -2px rgba(58, 237, 150, 0.25)'
+              }
+            }}
+          >
+            <HiChatBubbleLeftRight size={20} />
             {isOpen && (
-              <Typography
-                variant="h5"
-                sx={{
-                  color: "#ffffff",
-                  fontWeight: "bold",
-                  textTransform: "uppercase",
-                  letterSpacing: "2px",
-                  fontSize: "1.2rem",
-                }}
-              >
-                AwesomeApp
+              <Typography sx={{ 
+                ml: 1.5, 
+                color:'#fff',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                letterSpacing: '-0.2px'
+              }}>
+                Support Hub
               </Typography>
             )}
-
-            {/* Custom Hamburger Icon */}
-            <IconButton
-              onClick={toggleDrawer}
-              sx={{
-                color: "#ffffff",
-                backgroundColor: "#388e3c", // Background color for button
-                borderRadius: "50%", // Circular shape for the button
-                padding: "0.5rem",
-                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)", // Shadow for depth
-                "&:hover": {
-                  backgroundColor: "#1e7c1e", // Darker shade on hover
-                },
-                transition: "all 0.3s ease", // Smooth transition for the button
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  height: "20px", // Adjust height for bars
-                  width: "20px", // Adjust width for button
-                }}
-              >
-                <Box
-                  sx={{
-                    height: "4px", // Thickness of the first bar
-                    width: "16px", // Width of the first bar
-                    backgroundColor: "#ffffff", // White color for bars
-                    borderRadius: "2px", // Rounded edges for bars
-                    transition: "all 0.3s ease", // Smooth transition
-                    transform: isHamburgerOpen ? "rotate(45deg) translateY(8px)" : "none", // Transition to an "X"
-                  }}
-                />
-                <Box
-                  sx={{
-                    height: "4px", // Thickness of the second bar
-                    width: "12px", // Width of the second bar (smaller)
-                    backgroundColor: "#ffffff", // White color for bars
-                    borderRadius: "2px", // Rounded edges for bars
-                    transition: "all 0.3s ease", // Smooth transition
-                    opacity: isHamburgerOpen ? 0 : 1, // Fade out when the hamburger is open
-                  }}
-                />
-                <Box
-                  sx={{
-                    height: "4px", // Thickness of the third bar
-                    width: "18px", // Width of the third bar (larger)
-                    backgroundColor: "#ffffff", // White color for bars
-                    borderRadius: "2px", // Rounded edges for bars
-                    transition: "all 0.3s ease", // Smooth transition
-                    transform: isHamburgerOpen ? "rotate(-45deg) translateY(-8px)" : "none", // Transition to an "X"
-                  }}
-                />
-              </Box>
-            </IconButton>
-          </Box>
-
-          {/* Sidebar Menu Items */}
-          <List>
-            {menuItems.map((item, index) => (
-              <ListItem
-                button
-                component={NavLink}
-                to={item.path}
-                key={index}
-                activeClassName="active" // Apply active class when active
-                sx={{
-                  display: "flex",
-                  justifyContent: isOpen ? "flex-start" : "center",
-                  alignItems: "center",
-                  padding: "0.5rem",
-                  gap: isOpen ? "10px" : "0",
-                  backgroundColor: "transparent", // Default background
-                  position: "relative", // For positioning the triangle
-                  "&.active": {
-                    backgroundColor: "#1e7c1e", // Active link background
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      right: "-10px",
-                      top: "50%",
-                      transform: "translateY(-50%) rotate(90deg)", // Center and rotate triangle
-                      width: 0,
-                      height: 0,
-                      borderLeft: "20px solid transparent",
-                      borderRight: "20px solid transparent",
-                      borderTop: "20px solid #ffffff", // White triangle
-                      transition: "all 0.3s ease", // Smooth transition
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: "40px",
-                    justifyContent: "center",
-                    color: "#ffffff",
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                {isOpen && <ListItemText primary={item.text} />}
-              </ListItem>
-            ))}
-          </List>
-
-          {/* Chat Icon at the bottom */}
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: "20px", // Add space from the bottom
-              left: "50%",
-              transform: "translateX(-50%)",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            <IconButton
-              sx={{
-                color: "#ffffff",
-                backgroundColor: "#388e3c", // Same background as sidebar
-                padding: "0.8rem",
-                borderRadius: "50%",
-                boxShadow: "0px 4px 6px rgba(193, 193, 193, 0.2)",
-                "&:hover": {
-                  backgroundColor: "#1e7c1e",
-                },
-              }}
-            >
-              <FaComments size={24} />
-            </IconButton>
-          </Box>
-        </Drawer>
+          </IconButton>
+        </motion.div>
       </Box>
-    </ThemeProvider>
+    </Drawer>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Box,
   Grid,
@@ -9,314 +9,396 @@ import {
   LinearProgress,
   Chip,
   Fab,
-  useTheme,
+  IconButton
 } from "@mui/material";
 import {
   Groups,
   Work,
   Apartment,
   FamilyRestroom,
-  ArrowUpward,
   Mail,
+  TrendingUp,
+  MoreVert
 } from "@mui/icons-material";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux";
-import { getAllEmployees } from "../../../feathers/Employee/EmployeeActions";
-import { getAllDepartments } from "../../../feathers/Departments/DepartmentActions";
-import { getAllDependents } from "../../../feathers/Dependents/DependentActions";
-import { getAllProjects } from "../../../feathers/Project/ProjectActions";
 
-const StatsCard = ({ icon, title, value, trend }) => (
-  <motion.div whileHover={{ scale: 1.03 }}>
+// Simplified Color Palette
+const colors = {
+  primary: '#3aed96', // Blue
+  secondary: '#4caf50', // Green
+  accent: '#ff9800', // Orange
+  background: '#f5f5f5', // Light grey
+  text: '#333333', // Dark grey
+  white: '#ffffff',
+  spcial:"rgba(58, 237, 150, 0.3)"
+};
+
+// Simplified Typography
+const typography = {
+  h1: { fontSize: '2.5rem', fontWeight: 700 },
+  h2: { fontSize: '2rem', fontWeight: 600 },
+  h3: { fontSize: '1.75rem', fontWeight: 600 },
+  h4: { fontSize: '1.5rem', fontWeight: 600 },
+  h5: { fontSize: '1.25rem', fontWeight: 600 },
+  h6: { fontSize: '1rem', fontWeight: 600 },
+  body1: { fontSize: '1rem', fontWeight: 400 },
+  body2: { fontSize: '0.875rem', fontWeight: 400 },
+};
+
+// Animation configurations
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { 
+      type: "spring", 
+      stiffness: 100,
+      damping: 20
+    }
+  }
+};
+
+const DashboardCard = ({ title, value, icon, color }) => (
+  <motion.div variants={cardVariants}>
     <Card sx={{ 
       p: 3, 
-      borderRadius: 4, 
-      boxShadow: '0px 10px 20px rgba(0,0,0,0.05)',
-      transition: 'all 0.3s ease',
-      '&:hover': { boxShadow: '0px 15px 25px rgba(0,0,0,0.1)' }
+      borderRadius: 2,
+      backgroundColor: colors.white,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      transition: 'transform 0.3s ease',
+      '&:hover': {
+        transform: 'translateY(-5px)'
+      }
     }}>
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <Avatar sx={{ bgcolor: '#4caf5020', width: 56, height: 56 }}>
-          {React.cloneElement(icon, { sx: { color: '#4caf50', fontSize: 28 } })}
+      <Stack direction="row" justifyContent="space-between">
+        <div>
+          <Typography variant="body2" sx={{ color: colors.text, opacity: 0.8 }}>
+            {title}
+          </Typography>
+          <Typography variant="h3" sx={{ fontWeight: 700, mt: 1, color: colors.text }}>
+            {value}
+          </Typography>
+        </div>
+        <Avatar sx={{ 
+          bgcolor: `${color}20`, 
+          width: 56, 
+          height: 56 
+        }}>
+          {React.cloneElement(icon, { sx: { fontSize: 28, color: color } })}
         </Avatar>
-        <Box>
-          <Typography variant="subtitle2" color="text.secondary">{title}</Typography>
-          <Typography variant="h4" fontWeight="700">{value}</Typography>
-          <Stack direction="row" alignItems="center" spacing={1} mt={0.5}>
-            <ArrowUpward sx={{ color: '#4caf50', fontSize: 16 }} />
-            <Typography variant="body2" color="#4caf50">{trend}</Typography>
-          </Stack>
-        </Box>
       </Stack>
     </Card>
   </motion.div>
 );
 
-const ProjectProgress = ({ project }) => (
+const AnalyticsChart = () => (
+  <motion.div variants={cardVariants}>
+    <Card sx={{ 
+      p: 3, 
+      borderRadius: 2,
+      backgroundColor: colors.white,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      height: '100%'
+    }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="h6" sx={{ fontWeight: 600, color: colors.text }}>
+          Employee Distribution
+        </Typography>
+        <IconButton>
+          <MoreVert />
+        </IconButton>
+      </Stack>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={employeesData}>
+          <XAxis dataKey="department" />
+          <YAxis />
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: colors.white,
+              borderRadius: 2,
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+          />
+          <Bar 
+            dataKey="count" 
+            fill={colors.spcial}
+            radius={[8, 8, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </Card>
+  </motion.div>
+);
+
+const ProgressItem = ({ title, progress, color }) => (
   <motion.div whileHover={{ x: 5 }}>
     <Box sx={{ mb: 3 }}>
       <Stack direction="row" justifyContent="space-between" mb={1}>
-        <Typography variant="body1">{project?.name || 'Project'}</Typography>
-        <Typography variant="body1" fontWeight="500">
-          {project?.progress || 0}%
+        <Typography variant="body1" sx={{ color: colors.text }}>
+          {title}
+        </Typography>
+        <Typography variant="body1" fontWeight={600} sx={{ color: colors.text }}>
+          {progress}%
         </Typography>
       </Stack>
       <LinearProgress 
         variant="determinate" 
-        value={project?.progress || 0} 
+        value={progress} 
         sx={{ 
-          height: 8, 
+          height: 8,
           borderRadius: 4,
-          backgroundColor: '#f0f0f0',
+          backgroundColor: `${color}20`,
           '& .MuiLinearProgress-bar': {
             borderRadius: 4,
-            backgroundColor: '#4caf50'
+            backgroundColor: color
           }
-        }} 
+        }}
       />
-      <Stack direction="row" spacing={1} mt={1.5}>
-        {(project?.team || []).map((member, index) => (
-          <Chip
-            key={index}
-            label={member}
-            size="small"
-            sx={{ 
-              backgroundColor: '#4caf5010',
-              color: '#4caf50',
-              fontWeight: 500 
-            }}
-          />
-        ))}
-      </Stack>
     </Box>
   </motion.div>
 );
 
 const Dashboards = () => {
-  // Redux state selectors
-  const { empPaged: employeesData } = useSelector((state) => state.emp);
-  const { deptPaged: departmentsData } = useSelector((state) => state.dept);
-  const { depPaged: dependentsData } = useSelector((state) => state.dependent);
-  const { projPaged: projectsData } = useSelector((state) => state.project);
-  
-  const dispatch = useDispatch();
-  const theme = useTheme();
-
-  // Fetch all data on mount
-  useEffect(() => {
-    const pageParams = { pageNum: 0, pageSize: 100 };
-    dispatch(getAllEmployees(pageParams));
-    dispatch(getAllDepartments(pageParams));
-    dispatch(getAllDependents(pageParams));
-    dispatch(getAllProjects(pageParams));
-  }, [dispatch]);
-
-  // Data processing functions
-  const getDepartmentDistribution = () => {
-    if (!employeesData?.employees) return [];
-    return employeesData.employees.reduce((acc, employee) => {
-      const department = employee.department || 'Unknown';
-      acc[department] = (acc[department] || 0) + 1;
-      return acc;
-    }, {});
-  };
-
-  const getRecentDependents = () => {
-    if (!dependentsData?.dependents || !employeesData?.employees) return [];
-    return dependentsData.dependents.slice(0, 5).map(dependent => {
-      const employee = employeesData.employees.find(e => e.id === dependent.employeeId);
-      return {
-        employeeName: employee?.name || 'Unknown',
-        dependentName: dependent.name,
-        relation: dependent.relationship
-      };
-    });
-  };
-
-  // Processed data
-  const departmentDistribution = Object.entries(getDepartmentDistribution())
-    .map(([name, count]) => ({ name, count }));
-  
-  const recentDependents = getRecentDependents();
-
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ 
+      p: 3, 
+      minHeight: '100vh',
+      backgroundColor: colors.background
+    }}>
       <Grid container spacing={3}>
-        {/* Stats Cards */}
+        {/* Key Metrics */}
         <Grid item xs={12} md={6} lg={3}>
-          <StatsCard
-            icon={<Groups />}
+          <DashboardCard
             title="Total Employees"
-            value={employeesData?.total || 0}
-            trend={`+${Math.round((employeesData?.total || 0) / 100 * 5)}% this quarter`}
+            value="1.2K"
+            icon={<Groups />}
+            color={colors.primary}
           />
         </Grid>
         <Grid item xs={12} md={6} lg={3}>
-          <StatsCard
-            icon={<Work />}
+          <DashboardCard
             title="Active Projects"
-            value={projectsData?.total || 0}
-            trend={`${projectsData?.projects?.filter(p => p.progress < 100).length || 0} ongoing`}
+            value="24"
+            icon={<Work />}
+            color={colors.secondary}
           />
         </Grid>
         <Grid item xs={12} md={6} lg={3}>
-          <StatsCard
-            icon={<Apartment />}
+          <DashboardCard
             title="Departments"
-            value={departmentsData?.total || 0}
-            trend={`${departmentsData?.departments?.length || 0} active teams`}
+            value="12"
+            icon={<Apartment />}
+            color={colors.accent}
           />
         </Grid>
         <Grid item xs={12} md={6} lg={3}>
-          <StatsCard
-            icon={<FamilyRestroom />}
+          <DashboardCard
             title="Dependents"
-            value={dependentsData?.total || 0}
-            trend={`+${Math.round((dependentsData?.total || 0) / 100 * 8)}% this year`}
+            value="356"
+            icon={<FamilyRestroom />}
+            color={colors.primary}
           />
         </Grid>
 
-        {/* Employees by Department Chart */}
+        {/* Main Chart */}
         <Grid item xs={12} lg={8}>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card sx={{ p: 3, borderRadius: 4, boxShadow: 3 }}>
-              <Typography variant="h6" mb={3}>Employees by Department</Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={departmentDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar 
-                    dataKey="count" 
-                    fill="#4caf50"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+          <AnalyticsChart />
+        </Grid>
+
+        {/* Progress Section */}
+        <Grid item xs={12} lg={4}>
+          <motion.div variants={cardVariants}>
+            <Card sx={{ 
+              p: 3, 
+              borderRadius: 2,
+              backgroundColor: colors.white,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              height: '100%'
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: colors.text }}>
+                Project Progress
+              </Typography>
+              <ProgressItem 
+                title="Platform Migration" 
+                progress={75} 
+                color={colors.primary}
+              />
+              <ProgressItem 
+                title="Mobile App" 
+                progress={45} 
+                color={colors.secondary}
+              />
+              <ProgressItem 
+                title="API Integration" 
+                progress={90} 
+                color={colors.accent}
+              />
             </Card>
           </motion.div>
         </Grid>
 
-        {/* Active Projects */}
+        {/* Recent Activity */}
         <Grid item xs={12} lg={4}>
-          <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
-            <Card sx={{ p: 3, borderRadius: 4, boxShadow: 3 }}>
-              <Typography variant="h6" mb={3}>Active Projects</Typography>
-              {(projectsData?.projects || []).map((project, index) => (
-                <ProjectProgress key={index} project={project} />
+          <motion.div variants={cardVariants}>
+            <Card sx={{ 
+              p: 3, 
+              borderRadius: 2,
+              backgroundColor: colors.white,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}>
+              <Stack direction="row" justifyContent="space-between" mb={3}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: colors.text }}>
+                  Recent Activity
+                </Typography>
+                <Chip 
+                  label="View All" 
+                  size="small" 
+                  sx={{ 
+                    bgcolor: `${colors.primary}20`, 
+                    fontWeight: 600,
+                    color: colors.primary
+                  }}
+                />
+              </Stack>
+              {activities.map((activity, index) => (
+                <motion.div 
+                  key={index}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Stack 
+                    direction="row" 
+                    spacing={2} 
+                    sx={{ 
+                      p: 2, 
+                      mb: 2, 
+                      borderRadius: 2,
+                      backgroundColor: `${colors.background}`
+                    }}
+                  >
+                    <Avatar sx={{ bgcolor: `${activity.color}20` }}>
+                      {activity.icon}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" fontWeight={600} sx={{ color: colors.text }}>
+                        {activity.title}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: colors.text, opacity: 0.7 }}>
+                        {activity.time}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </motion.div>
               ))}
             </Card>
           </motion.div>
         </Grid>
 
-        {/* Departments Overview */}
-        <Grid item xs={12} lg={6}>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card sx={{ p: 3, borderRadius: 4, boxShadow: 3 }}>
-              <Typography variant="h6" mb={3}>Departments</Typography>
-              <Stack spacing={2}>
-                {(departmentsData?.departments || []).map((dept, index) => {
-                  const memberCount = employeesData?.employees?.filter(
-                    e => e.department === dept.name
-                  ).length || 0;
-                  
-                  return (
-                    <Stack
-                      key={index}
-                      direction="row"
-                      alignItems="center"
-                      spacing={2}
-                      sx={{
-                        p: 2,
-                        borderRadius: 3,
-                        backgroundColor: '#fafafa',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          backgroundColor: '#f5f5f5',
-                          transform: 'translateX(5px)'
-                        }
-                      }}
-                    >
-                      <Avatar sx={{ 
-                        bgcolor: '#4caf5020', 
-                        width: 48, 
-                        height: 48 
-                      }}>
-                        <Apartment sx={{ color: '#4caf50' }} />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body1" fontWeight="500">
-                          {dept.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {memberCount} members • Manager: {dept.manager}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  );
-                })}
-              </Stack>
-            </Card>
-          </motion.div>
-        </Grid>
-
-        {/* Dependents Overview */}
-        <Grid item xs={12}>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card sx={{ p: 3, borderRadius: 4, boxShadow: 3 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h6">Recent Dependents</Typography>
-                <Chip label="View All" clickable sx={{ bgcolor: '#4caf5010', color: '#4caf50' }} />
-              </Stack>
-              <Box sx={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', padding: '12px', color: '#666' }}>Employee</th>
-                      <th style={{ textAlign: 'left', padding: '12px', color: '#666' }}>Dependent</th>
-                      <th style={{ textAlign: 'left', padding: '12px', color: '#666' }}>Relationship</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentDependents.map((dependent, index) => (
-                      <tr key={index} style={{ borderTop: '1px solid #eee' }}>
-                        <td style={{ padding: '12px' }}>{dependent.employeeName}</td>
-                        <td style={{ padding: '12px' }}>{dependent.dependentName}</td>
-                        <td style={{ padding: '12px' }}>
-                          <Chip 
-                            label={dependent.relation} 
-                            size="small" 
-                            sx={{ bgcolor: '#4caf5010', color: '#4caf50' }}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Box>
+        {/* Team Members */}
+        <Grid item xs={12} lg={8}>
+          <motion.div variants={cardVariants}>
+            <Card sx={{ 
+              p: 3, 
+              borderRadius: 2,
+              backgroundColor: colors.white,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: colors.text }}>
+                Team Members
+              </Typography>
+              <Grid container spacing={3}>
+                {teamMembers.map((member, index) => (
+                  <Grid item xs={12} sm={6} key={index}>
+                    <motion.div whileHover={{ y: -5 }}>
+                      <Stack 
+                        direction="row" 
+                        spacing={2} 
+                        sx={{ 
+                          p: 2, 
+                          borderRadius: 2,
+                          backgroundColor: `${colors.background}`
+                        }}
+                      >
+                        <Avatar 
+                          src={member.avatar} 
+                          sx={{ width: 48, height: 48 }}
+                        />
+                        <Box>
+                          <Typography variant="body2" fontWeight={600} sx={{ color: colors.text }}>
+                            {member.name}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: colors.text, opacity: 0.7 }}>
+                            {member.role}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </motion.div>
+                  </Grid>
+                ))}
+              </Grid>
             </Card>
           </motion.div>
         </Grid>
       </Grid>
 
       {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        sx={{
-          position: 'fixed',
-          bottom: 32,
-          right: 32,
-          bgcolor: '#4caf50',
-          '&:hover': { bgcolor: '#388e3c' },
-          transition: 'all 0.3s ease'
-        }}
+      <motion.div 
+        style={{ position: 'fixed', bottom: 32, right: 32 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
       >
-        <Mail />
-      </Fab>
+        <Fab
+          sx={{
+            backgroundColor: colors.primary,
+            color: colors.white,
+            '&:hover': {
+              backgroundColor: colors.primary
+            }
+          }}
+        >
+          <Mail />
+        </Fab>
+      </motion.div>
     </Box>
   );
 };
+
+// Mock Data
+const employeesData = [
+  { department: 'Engineering', count: 45 },
+  { department: 'Marketing', count: 22 },
+  { department: 'HR', count: 12 },
+  { department: 'Finance', count: 18 },
+];
+
+const activities = [
+  { 
+    icon: <TrendingUp sx={{ color: colors.primary }} />,
+    title: "Project Milestone Reached",
+    time: "2h ago",
+    color: colors.primary
+  },
+  { 
+    icon: <Work sx={{ color: colors.secondary }} />,
+    title: "New Project Created",
+    time: "1d ago",
+    color: colors.secondary
+  },
+  { 
+    icon: <Groups sx={{ color: colors.accent }} />,
+    title: "Team Member Added",
+    time: "3d ago",
+    color: colors.accent
+  },
+];
+
+const teamMembers = [
+  { name: 'Alex Johnson', role: 'Lead Developer', avatar: '...' },
+  { name: 'Sarah Miller', role: 'UX Designer', avatar: '...' },
+  { name: 'Mike Chen', role: 'Project Manager', avatar: '...' },
+  { name: 'Emma Wilson', role: 'QA Engineer', avatar: '...' },
+];
 
 export default Dashboards;
