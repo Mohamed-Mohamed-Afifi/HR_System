@@ -7,7 +7,6 @@ import {
   TableHead,
   TableRow,
   Checkbox,
-  Toolbar,
   TextField,
   InputAdornment,
   Box,
@@ -19,7 +18,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Tooltip,
   Menu,
   MenuItem,
   Select,
@@ -27,12 +25,8 @@ import {
   FormControl,
   ListItemText,
   Card,
-  Grid,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
+import { Delete, Edit, Search, Add } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { 
   addNewEmployee, 
@@ -41,10 +35,10 @@ import {
   updateEmployee 
 } from "../../../../feathers/Employee/EmployeeActions";
 import Swal from "sweetalert2";
+import { format, parseISO } from 'date-fns';
 
 const EmployeeTable = (props) => {
   const dispatch = useDispatch();
-
   const [selected, setSelected] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategories, setSearchCategories] = useState(["ALL"]);
@@ -62,39 +56,52 @@ const EmployeeTable = (props) => {
     department_number: "",
   });
 
-  const availableCategories = ["ALL", "ssn", "full_name", "address", "sex", "salary", "department_number"];
+  const availableCategories = ["ssn", "full_name", "address", "sex", "salary", "department_number"];
+
+  // Formatting functions
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    try {
+      return format(parseISO(dateString), 'MM/dd/yyyy');
+    } catch {
+      return "—";
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return amount?.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }) || "—";
+  };
 
   // Search functionality
   const handleSearch = (e) => setSearchQuery(e.target.value);
 
   const handleCategoryChange = (event) => {
-    const value = event.target.value;
-    setSearchCategories(value);
+    setSearchCategories(event.target.value);
   };
 
   const constructSearchArgs = () => {
     const searchArgs = {};
     if (searchQuery) {
-      if (searchCategories.includes("ALL")) {
-        availableCategories
-          .filter(category => category !== "ALL")
-          .forEach(category => {
-            searchArgs[category] = searchQuery;
-          });
-      } else {
-        searchCategories.forEach(category => {
-          searchArgs[category] = searchQuery;
-        });
-      }
+      const categories = searchCategories.includes("ALL") 
+        ? availableCategories 
+        : searchCategories;
+      
+      categories.forEach(category => {
+        searchArgs[category] = searchQuery;
+      });
     }
     return searchArgs;
   };
 
   const handleSearchSubmit = async () => {
-    const searchArgs = constructSearchArgs();
     const payload = {
-      searchArgs,
-      pageNumber: props.data.page_number || 0,
+      searchArgs: constructSearchArgs(),
+      pageNumber: 0,
       pageSize: props.data.page_size || 10,
     };
 
@@ -112,8 +119,6 @@ const EmployeeTable = (props) => {
       setNewEmployee({
         ...employee,
         birthdate: employee.birthdate?.split('T')[0] || "",
-        manager_ssn: employee.manager_ssn || "",
-        department_number: employee.department_number || ""
       });
       setIsEditMode(true);
     } else {
@@ -134,10 +139,9 @@ const EmployeeTable = (props) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const numericFields = ["ssn", "salary", "department_number", "manager_ssn"];
     
-    if (["ssn", "salary", "department_number", "manager_ssn"].includes(name)) {
-      if (!/^\d*$/.test(value)) return;
-    }
+    if (numericFields.includes(name) && !/^\d*$/.test(value)) return;
 
     setNewEmployee(prev => ({
       ...prev,
@@ -147,10 +151,10 @@ const EmployeeTable = (props) => {
 
   const validateEmployee = () => {
     const errors = [];
-    if (!newEmployee.ssn) errors.push("SSN is required");
-    if (!newEmployee.full_name) errors.push("Full name is required");
-    if (!newEmployee.birthdate) errors.push("Birthdate is required");
-    if (isNaN(newEmployee.salary)) errors.push("Salary must be a number");
+    if (!/^\d{9}$/.test(newEmployee.ssn)) errors.push("SSN must be 9 digits");
+    if (!newEmployee.full_name.trim()) errors.push("Full name is required");
+    if (!newEmployee.birthdate) errors.push("Valid birthdate is required");
+    if (!/^\d+$/.test(newEmployee.salary)) errors.push("Valid salary is required");
     return errors;
   };
 
@@ -177,7 +181,7 @@ const EmployeeTable = (props) => {
       .then(() => {
         Swal.fire("Success", `Employee ${isEditMode ? 'updated' : 'added'}!`, "success");
         handleCloseModal();
-        props.onUpdateEmployees();
+        props.onRefresh();
       })
       .catch(error => {
         Swal.fire("Error", error.message || "Operation failed", "error");
@@ -190,10 +194,11 @@ const EmployeeTable = (props) => {
       text: "This cannot be undone!",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: "#d32f2f",
     }).then((result) => {
       if (result.isConfirmed) {
         dispatch(deleteEmployee(ssn))
-          .then(() => props.onDeleteEmployee(ssn))
+          .then(() => props.onRefresh())
           .catch(error => Swal.fire("Error", error.message, "error"));
       }
     });
@@ -215,126 +220,185 @@ const EmployeeTable = (props) => {
   };
 
   return (
-    <Card elevation={3} sx={{ borderRadius: "16px", padding: "1.5rem", backgroundColor: "#f9f9fb" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+    <Card elevation={0} sx={{
+      borderRadius: "12px",
+      p: 3,
+      backgroundColor: "white",
+      boxShadow: "0px 8px 24px -12px rgba(0, 0, 0, 0.1)",
+      overflowX: 'auto'
+    }}>
+      {/* Toolbar */}
+      <Box sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        mb: 3,
+        flexWrap: 'wrap',
+        '& > *': { my: 0.5 }
+      }}>
         <Button
-          variant="contained"
-          startIcon={<AddIcon />}
+          variant="outlined"
+          startIcon={<Add />}
           sx={{
-            backgroundColor: "#388e3c",
-            color: "#fff",
-            "&:hover": { backgroundColor: "#2c6d31" },
-            fontWeight: "bold",
-            borderRadius: "12px",
-            textTransform: "none",
+            // backgroundColor: "#4CAF50",
+            color: "#4CAF50",
+            "&:hover": { backgroundColor: "#ccc" },
+            borderRadius: "8px",
+            borderColor:'#4CAF50',
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none'
           }}
           onClick={() => handleOpenModal()}
         >
           Add Employee
         </Button>
 
-        <Box sx={{ display: 'flex', gap: 2, flexGrow: 1, maxWidth: '800px', ml: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Search employees..."
-            variant="outlined"
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "#388e3c" }} />
-                </InputAdornment>
-              ),
-              sx: {
-                borderRadius: "25px",
-                backgroundColor: "#ffffff",
-                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-              }
-            }}
-            value={searchQuery}
-            onChange={handleSearch}
-          />
-          
-          <Button
-            variant="outlined"
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{
-              color: "#2e7d32",
-              fontWeight: "bold",
-              borderRadius: "12px",
-              textTransform: "none",
-              minWidth: '200px'
-            }}
-          >
-            Search Categories
-          </Button>
-          
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-            PaperProps={{ sx: { borderRadius: "12px", mt: 1 } }}
-          >
-            <FormControl sx={{ width: 320, p: 2 }}>
-              <InputLabel>Search Categories</InputLabel>
-              <Select
-                multiple
-                value={searchCategories}
-                onChange={handleCategoryChange}
-                renderValue={(selected) => selected.join(", ")}
-              >
-                {availableCategories.map((category) => (
-                  <MenuItem key={category} value={category}>
-                    <Checkbox checked={searchCategories.includes(category)} />
-                    <ListItemText primary={category} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Menu>
+        <TextField
+          size="small"
+          placeholder="Search employees..."
+          variant="outlined"
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: "action.active" }} />
+              </InputAdornment>
+            ),
+            sx: {
+              borderRadius: "8px",
+              backgroundColor: "background.paper",
+              "& .MuiOutlinedInput-input": { py: '8px' }
+            },
+          }}
+          value={searchQuery}
+          onChange={handleSearch}
+          sx={{ maxWidth: "400px", flex: 1 }}
+        />
 
-          <Button
-            variant="contained"
-            onClick={handleSearchSubmit}
-            sx={{
-              backgroundColor: "#388e3c",
-              color: "#fff",
-              "&:hover": { backgroundColor: "#2c6d31" },
-              fontWeight: "bold",
-              borderRadius: "12px",
-              textTransform: "none",
-            }}
-          >
-            Search
-          </Button>
-        </Box>
-      </Toolbar>
+        <Button
+          variant="outlined"
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          sx={{
+            color: "text.secondary",
+            borderColor: "divider",
+            borderRadius: "8px",
+            textTransform: "none",
+            px: 3,
+            fontWeight: 500
+          }}
+        >
+          Search Categories
+        </Button>
 
-      <TableContainer component={Paper} sx={{ borderRadius: "12px", mt: 2, boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)" }}>
-        <Table>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          PaperProps={{
+            sx: {
+              borderRadius: "8px",
+              boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
+              minWidth: "250px",
+            },
+          }}
+        >
+          <FormControl sx={{ width: "100%", p: 2 }}>
+            <InputLabel>Categories</InputLabel>
+            <Select
+              multiple
+              value={searchCategories}
+              onChange={handleCategoryChange}
+              renderValue={(selected) => selected.join(", ")}
+            >
+              {["ALL", ...availableCategories].map((category) => (
+                <MenuItem key={category} value={category} sx={{ py: 0.5 }}>
+                  <Checkbox
+                    checked={searchCategories.includes(category)}
+                    sx={{ color: "text.secondary", "&.Mui-checked": { color: "#4CAF50" } }}
+                  />
+                  <ListItemText primary={category} sx={{ typography: 'body2' }} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Menu>
+
+        <Button
+          variant="outlined"
+          onClick={handleSearchSubmit}
+          sx={{
+            // backgroundColor: "#4CAF50",
+            color: "#4CAF50",
+            "&:hover": { backgroundColor: "#ccc" },
+            borderRadius: "8px",
+            borderColor:'#4CAF50',
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none'
+          }}
+        >
+          Search
+        </Button>
+      </Box>
+
+      {/* Table */}
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          borderRadius: "8px",
+          border: "1px solid",
+          borderColor: "divider",
+          minWidth: 1200
+        }}
+      >
+        <Table stickyHeader>
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#388e3c" }}>
-              <TableCell padding="checkbox">
+            <TableRow>
+              <TableCell padding="checkbox" sx={{ 
+                backgroundColor: '#FAFAFA', 
+                borderBottom: '2px solid',
+                borderColor: 'divider'
+              }}>
                 <Checkbox
                   indeterminate={selected.length > 0 && selected.length < props.data.employees.length}
                   checked={selected.length === props.data.employees.length}
-                  sx={{ color: "#fff" }}
+                  onChange={(e) => setSelected(e.target.checked ? props.data.employees.map(e => e.ssn) : [])}
+                  color="primary"
                 />
               </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>SSN</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Full Name</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Birthdate</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Address</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Gender</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Salary</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Department</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Actions</TableCell>
+              {['SSN', 'Full Name', 'Birthdate', 'Address', 'Gender', 'Salary','Supervisor_Ssn', 'DepartmentNumber','DepartmentName', 'Actions'].map((header) => (
+                <TableCell 
+                  key={header}
+                  sx={{
+                    backgroundColor: '#FAFAFA',
+                    borderBottom: '2px solid',
+                    borderColor: 'divider',
+                    py: 2,
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {header}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
+
           <TableBody>
             {props.data.employees.map((employee) => (
-              <TableRow key={employee.ssn} hover sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                <TableCell padding="checkbox">
+              <TableRow 
+                key={employee.ssn} 
+                hover 
+                sx={{ 
+                  '&:nth-of-type(even)': { backgroundColor: '#FAFAFA' },
+                  '&:hover': { backgroundColor: '#F5F5F5' }
+                }}
+              >
+                <TableCell padding="checkbox" sx={{ py: 1.5 }}>
                   <Checkbox
                     checked={selected.includes(employee.ssn)}
                     onChange={() => setSelected(prev => 
@@ -342,28 +406,38 @@ const EmployeeTable = (props) => {
                         ? prev.filter(id => id !== employee.ssn) 
                         : [...prev, employee.ssn]
                     )}
-                    sx={{ color: "#388e3c" }}
+                    color="primary"
                   />
                 </TableCell>
-                <TableCell>{employee.ssn}</TableCell>
-                <TableCell>{employee.full_name}</TableCell>
-                <TableCell>{new Date(employee.birthdate).toLocaleDateString()}</TableCell>
-                <TableCell>{employee.address}</TableCell>
-                <TableCell>{employee.sex}</TableCell>
-                <TableCell>${employee.salary?.toLocaleString()}</TableCell>
-                <TableCell>{employee.department_number || 'N/A'}</TableCell>
-                <TableCell>
-                  <Box sx={{ display: "flex", gap: "8px" }}>
-                    <Tooltip title="Edit">
-                      <IconButton onClick={() => handleOpenModal(employee)} sx={{ color: '#388e3c' }}>
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton onClick={() => handleDelete(employee.ssn)} sx={{ color: '#d32f2f' }}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+                <TableCell sx={{ py: 1.5, fontWeight: 500 }}>{employee.ssn}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{employee.full_name}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{formatDate(employee.birthdate)}</TableCell>
+                <TableCell sx={{ py: 1.5, color: 'text.secondary' }}>{employee.address || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{employee.sex === 'M' ? 'Male' : 'Female'}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{formatCurrency(employee.salary)}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{employee.manager_ssn}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{employee.department_number || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{employee.department_name || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <IconButton 
+                      onClick={() => handleOpenModal(employee)}
+                      sx={{ 
+                        color: '#4CAF50',
+                        '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
+                      }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton 
+                      onClick={() => handleDelete(employee.ssn)}
+                      sx={{ 
+                        color: 'rgb(189 25 25)',
+                        '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
+                      }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -373,119 +447,147 @@ const EmployeeTable = (props) => {
       </TableContainer>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 15]}
+        rowsPerPageOptions={[5, 10, 25]}
         component="div"
         count={props.data.totalPages * props.data.page_size}
         rowsPerPage={props.data.page_size}
         page={props.data.page_number}
         onPageChange={(e, newPage) => props.onPageChange(newPage)}
         onRowsPerPageChange={(e) => props.onRowsPerPageChange(parseInt(e.target.value, 10))}
-        sx={{ mt: 2 }}
+        sx={{
+          mt: 2,
+          '& .MuiTablePagination-toolbar': { px: 0 },
+          '& .MuiTablePagination-actions': { ml: 2 }
+        }}
       />
 
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, textAlign: 'center' }}>
-          {isEditMode ? 'Edit Employee' : 'New Employee'}
+      {/* Employee Form Modal */}
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            width: "100%",
+            maxWidth: "600px",
+            boxShadow: "0px 12px 24px -12px rgba(0, 0, 0, 0.1)",
+            p: 3
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          typography: 'h6',
+          px: 0,
+          pt: 0,
+          pb: 2,
+          fontWeight: 600
+        }}>
+          {isEditMode ? "Edit Employee" : "New Employee"}
         </DialogTitle>
-        <DialogContent sx={{ pt: '1rem!important' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="SSN"
-                name="ssn"
-                value={newEmployee.ssn}
+
+        <DialogContent sx={{ px: 0, py: 1 }}>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="SSN"
+              name="ssn"
+              value={newEmployee.ssn}
+              onChange={handleChange}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              disabled={isEditMode}
+            />
+
+            <TextField
+              fullWidth
+              label="Full Name"
+              name="full_name"
+              value={newEmployee.full_name}
+              onChange={handleChange}
+            />
+
+            <TextField
+              fullWidth
+              label="Birthdate"
+              type="date"
+              name="birthdate"
+              InputLabelProps={{ shrink: true }}
+              value={newEmployee.birthdate}
+              onChange={handleChange}
+            />
+
+            <TextField
+              fullWidth
+              label="Address"
+              name="address"
+              value={newEmployee.address}
+              onChange={handleChange}
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Gender</InputLabel>
+              <Select
+                name="sex"
+                value={newEmployee.sex}
                 onChange={handleChange}
-                margin="dense"
-                inputProps={{ inputMode: 'numeric' }}
-                disabled={isEditMode}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                name="full_name"
-                value={newEmployee.full_name}
-                onChange={handleChange}
-                margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Birthdate"
-                type="date"
-                name="birthdate"
-                InputLabelProps={{ shrink: true }}
-                value={newEmployee.birthdate}
-                onChange={handleChange}
-                margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Address"
-                name="address"
-                value={newEmployee.address}
-                onChange={handleChange}
-                margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth margin="dense">
-                <InputLabel>Gender</InputLabel>
-                <Select
-                  name="sex"
-                  value={newEmployee.sex}
-                  onChange={handleChange}
-                  label="Gender"
-                >
-                  <MenuItem value="M">Male</MenuItem>
-                  <MenuItem value="F">Female</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Salary"
-                name="salary"
-                value={newEmployee.salary}
-                onChange={handleChange}
-                margin="dense"
-                inputProps={{ inputMode: 'numeric' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Manager SSN (Optional)"
-                name="manager_ssn"
-                value={newEmployee.manager_ssn}
-                onChange={handleChange}
-                margin="dense"
-                inputProps={{ inputMode: 'numeric' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Department Number (Optional)"
-                name="department_number"
-                value={newEmployee.department_number}
-                onChange={handleChange}
-                margin="dense"
-                inputProps={{ inputMode: 'numeric' }}
-              />
-            </Grid>
-          </Grid>
+                label="Gender"
+              >
+                <MenuItem value="M">Male</MenuItem>
+                <MenuItem value="F">Female</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="Salary"
+              name="salary"
+              value={newEmployee.salary}
+              onChange={handleChange}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
+
+            <TextField
+              fullWidth
+              label="Manager SSN (Optional)"
+              name="manager_ssn"
+              value={newEmployee.manager_ssn}
+              onChange={handleChange}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
+
+            <TextField
+              fullWidth
+              label="Department Number (Optional)"
+              name="department_number"
+              value={newEmployee.department_number}
+              onChange={handleChange}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {isEditMode ? 'Update' : 'Create'}
+
+        <DialogActions sx={{ px: 0, pt: 2 }}>
+          <Button
+            onClick={handleCloseModal}
+            sx={{
+              color: 'text.secondary',
+              px: 3,
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "action.hover" }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            sx={{
+              backgroundColor: "#4CAF50",
+              color: "#fff",
+              px: 3,
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "#43A047" }
+            }}
+          >
+            {isEditMode ? "Update" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>

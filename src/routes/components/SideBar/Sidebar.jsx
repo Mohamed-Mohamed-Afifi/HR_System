@@ -26,7 +26,7 @@ import theme from "./theme";
 import "./side.css";
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width:768px)");
   const iconSize = 22;
 

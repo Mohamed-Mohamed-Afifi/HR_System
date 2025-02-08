@@ -7,7 +7,6 @@ import {
   TableHead,
   TableRow,
   Checkbox,
-  Toolbar,
   TextField,
   InputAdornment,
   Box,
@@ -27,17 +26,12 @@ import {
   FormControl,
   ListItemText,
   Card,
-  Grid,
-  Typography,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
+import { Delete, Edit, Search, Add, CheckBox } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { addNewDepartment, deleteDepartment, filterDepartment, updateDepartment } from "../../../feathers/Departments/DepartmentActions";
 import Swal from "sweetalert2";
-
+import { format } from 'date-fns';
 const MultiSelectTable = (props) => {
   const dispatch = useDispatch();
 
@@ -66,7 +60,7 @@ const MultiSelectTable = (props) => {
     setOpen(false);
   };
   
-  const availableCategories = ["ALL", "dnum", "dname", "supervisorSsn", "employeeName", "projectName", "supervisorName"];
+  const availableCategories = ['ALL',"dnum", "dname", "supervisorSsn", "employeeName", "projectName", "supervisorName"];
   const handleCategoryChange = (event) => {
     const value = event.target.value;
     setSearchCategories(value);
@@ -204,7 +198,10 @@ const MultiSelectTable = (props) => {
             confirmButtonText: "OK",
           });
           handleCloseModal();
-
+      // Refresh data after successful operation
+      if (typeof props.onRefresh === "function") {
+        props.onRefresh();
+      }
           // Call the onUpdateDepartments function to update the parent component's state
           if (typeof props.onUpdateDepartments === "function") {
             props.onUpdateDepartments(departmentData, true); // Pass true for edit mode
@@ -228,7 +225,9 @@ const MultiSelectTable = (props) => {
             confirmButtonText: "OK",
           });
           handleCloseModal();
-
+          if (typeof props.onRefresh === "function") {
+            props.onRefresh();
+          }
           // Call the onUpdateDepartments function to update the parent component's state
           if (typeof props.onUpdateDepartments === "function") {
             props.onUpdateDepartments(departmentData, false); // Pass false for add mode
@@ -269,7 +268,7 @@ const MultiSelectTable = (props) => {
               text: "The department has been deleted.",
               confirmButtonText: "OK",
             });
-  
+            
             // Call the onDeleteDepartment function to update the parent component's state
             if (typeof props.onDeleteDepartment === "function") {
               props.onDeleteDepartment(dnum);
@@ -286,19 +285,53 @@ const MultiSelectTable = (props) => {
       }
     });
   };
+// Format date display
+const formatDate = (dateString) => {
+  if (!dateString) return "—";
+  try {
+    return format(new Date(dateString), 'PPpp');
+  } catch {
+    return "—";
+  }
+};
+
+// Format SSN display
+const formatSSN = (ssn) => {
+  if (!ssn) return "—";
+  const ssnString = String(ssn);
+  return `***-**-${ssnString.slice(-4)}`;
+};
+
   return (
-    <Card elevation={3} sx={{ borderRadius: "16px", padding: "1.5rem", backgroundColor: "#f9f9fb" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+    <Card elevation={0} sx={{
+      borderRadius: "12px",
+      padding: 3,
+      backgroundColor: "white",
+      boxShadow: "0px 8px 24px -12px rgba(0, 0, 0, 0.1)",
+      overflowX: 'auto'
+    }}>
+      {/* Toolbar Section */}
+      <Box sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        mb: 3,
+        flexWrap: 'wrap',
+        '& > *': { my: 0.5 }
+      }}>
         <Button
-          variant="contained"
-          startIcon={<AddIcon />}
+          variant="outlined"
+          startIcon={<Add />}
           sx={{
-            backgroundColor: "#388e3c",
-            color: "#fff",
-            "&:hover": { backgroundColor: "#2c6d31" },
-            fontWeight: "bold",
-            borderRadius: "12px",
-            textTransform: "none",
+            // backgroundColor: "#4CAF50",
+            color: "#4CAF50",
+            "&:hover": { backgroundColor: "#ccc" },
+            borderRadius: "8px",
+            borderColor:'#4CAF50',
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none'
           }}
           onClick={() => handleOpenModal()}
         >
@@ -306,308 +339,307 @@ const MultiSelectTable = (props) => {
         </Button>
 
         <TextField
-  size="small"
-  placeholder="Search..."
-  variant="outlined"
-  fullWidth
-  InputProps={{
-    startAdornment: (
-      <InputAdornment position="start">
-        <SearchIcon sx={{ color: "#388e3c" }} /> {/* Modern green color */}
-      </InputAdornment>
-    ),
-    sx: {
-      borderRadius: "25px", // Rounded corners
-      backgroundColor: "#ffffff", // White background
-      boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)", // Subtle shadow
-      transition: "box-shadow 0.3s ease", // Smooth transition
-      "&:hover": {
-        boxShadow: "0px 6px 16px rgba(0, 0, 0, 0.15)", // Hover effect
-      },
-      "&.Mui-focused": {
-        boxShadow: "0px 6px 16px rgba(0, 0, 0, 0.15)", // Focus effect
-      },
-    },
-  }}
-  InputLabelProps={{
-    shrink: true, // Floating label
-  }}
-  value={searchQuery}
-  onChange={handleSearch}
-  sx={{
-    maxWidth: "400px", // Limit width for better aesthetics
-    "& .MuiOutlinedInput-root": {
-      borderRadius: "25px", // Rounded corners
-    },
-  }}
-/>
+          size="small"
+          placeholder="Search..."
+          variant="outlined"
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: "action.active" }} />
+              </InputAdornment>
+            ),
+            sx: {
+              borderRadius: "8px",
+              backgroundColor: "background.paper",
+              "& .MuiOutlinedInput-input": { py: '8px' }
+            },
+          }}
+          value={searchQuery}
+          onChange={handleSearch}
+          sx={{ maxWidth: "400px", flex: 1 }}
+        />
 
- {/* Search Category Dropdown */}
-<Button
-  variant="outlined"
-  onClick={handleOpenDropdown}
-  sx={{
-    color: "#2e7d32",
-    fontWeight: "bold",
-    borderRadius: "12px",
-    textTransform: "none",
-    padding: "10px 20px",
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-  }}
->
-  Select Search Categories
-</Button>
-
-{/* Dropdown Menu */}
-<Menu
-  anchorEl={anchorEl}
-  open={open}
-  onClose={handleCloseDropdown}
-  PaperProps={{
-    sx: {
-      borderRadius: "12px",
-      marginTop: "8px",
-      boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.15)",
-      minWidth: "250px",
-    },
-  }}
->
-  <FormControl sx={{ width: "100%", padding: "1rem" }}>
-    <InputLabel sx={{ fontWeight: "bold", color: "#388e3c" }}>Categories</InputLabel>
-    <Select
-      multiple
-      value={searchCategories}
-      onChange={handleCategoryChange}
-      renderValue={(selected) => selected.join(", ")}
-      sx={{
-        borderRadius: "8px",
-        "& .MuiOutlinedInput-notchedOutline": {
-          borderColor: "#388e3c",
-        },
-        "&:hover .MuiOutlinedInput-notchedOutline": {
-          borderColor: "#2e7d32",
-        },
-      }}
-    >
-      {availableCategories.map((category) => (
-        <MenuItem key={category} value={category} sx={{ padding: "8px 16px" }}>
-          <Checkbox
-            checked={searchCategories.indexOf(category) > -1}
-            sx={{ color: "#388e3c", "&.Mui-checked": { color: "#2e7d32" } }}
-          />
-          <ListItemText primary={category} sx={{ color: "#333" }} />
-        </MenuItem>
-      ))}
-    </Select>
-  </FormControl>
-</Menu>
-
-        {/* Search Button */}
         <Button
-          variant="contained"
+          variant="outlined"
+          onClick={handleOpenDropdown}
+          sx={{
+            color: "text.secondary",
+            borderColor: "divider",
+            borderRadius: "8px",
+            textTransform: "none",
+            px: 3,
+            fontWeight: 500
+          }}
+        >
+          Search Categories
+        </Button>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleCloseDropdown}
+          PaperProps={{
+            sx: {
+              borderRadius: "8px",
+              boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
+              minWidth: "250px",
+            },
+          }}
+        >
+          <FormControl sx={{ width: "100%", p: 2 }}>
+            <InputLabel>Categories</InputLabel>
+            <Select
+              multiple
+              value={searchCategories}
+              onChange={handleCategoryChange}
+              renderValue={(selected) => selected.join(", ")}
+              sx={{ "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" } }}
+            >
+              {availableCategories.map((category) => (
+                <MenuItem key={category} value={category} sx={{ py: 0.5 }}>
+                  <Checkbox
+                    checked={searchCategories.includes(category)}
+                    sx={{ color: "text.secondary", "&.Mui-checked": { color: "#4CAF50" } }}
+                  />
+                  <ListItemText primary={category} sx={{ typography: 'body2' }} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Menu>
+
+        <Button
+          variant="outlined"
           onClick={handleSearchSubmit}
           sx={{
-            backgroundColor: "#388e3c",
-            color: "#fff",
-            "&:hover": { backgroundColor: "#2c6d31" },
-            fontWeight: "bold",
-            borderRadius: "12px",
-            textTransform: "none",
+            // backgroundColor: "#4CAF50",
+            color: "#4CAF50",
+            "&:hover": { backgroundColor: "#ccc" },
+            borderRadius: "8px",
+            borderColor:'#4CAF50',
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none'
           }}
         >
           Search
         </Button>
-      </Toolbar>
+      </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: "12px", mt: 2, boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)" }}>
-        <Table>
+      {/* Table Section */}
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          borderRadius: "8px",
+          border: "1px solid",
+          borderColor: "divider",
+          minWidth: 1200,
+          '& .MuiTable-root': { minWidth: 1200 }
+        }}
+      >
+        <Table stickyHeader>
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#388e3c" }}>
-              <TableCell padding="checkbox">
+            <TableRow>
+              <TableCell padding="checkbox" sx={{ 
+                backgroundColor: '#FAFAFA', 
+                borderBottom: '2px solid',
+                borderColor: 'divider'
+              }}>
                 <Checkbox
                   indeterminate={selected.length > 0 && selected.length < props.data.departments.length}
                   checked={selected.length === props.data.departments.length}
                   onChange={handleSelectAll}
-                  sx={{ color: "#fff" }}
+                  color="primary"
                 />
               </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Department Number</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Department Name</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Supervisor SSN</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Actions</TableCell>
+              {['Department #', 'Department Name', 'Supervisor SSN', 'Supervisor', 'Created At', 'Created By', 'Last Modified', 'Modified By', 'Actions'].map((header) => (
+                <TableCell 
+                  key={header}
+                  sx={{
+                    backgroundColor: '#FAFAFA',
+                    borderBottom: '2px solid',
+                    borderColor: 'divider',
+                    py: 2,
+                    fontWeight: 600,
+                    color: 'text.primary',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {header}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
+
           <TableBody>
             {filteredRows.map((row) => (
-              <TableRow key={row.dnum} hover sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                <TableCell padding="checkbox">
+              <TableRow 
+                key={row.dnum} 
+                hover 
+                sx={{ 
+                  '&:nth-of-type(even)': { backgroundColor: '#FAFAFA' },
+                  '&:hover': { backgroundColor: '#F5F5F5' }
+                }}
+              >
+                <TableCell padding="checkbox" sx={{ py: 1.5 }}>
                   <Checkbox
                     checked={selected.includes(row.dnum)}
                     onChange={() => handleSelect(row.dnum)}
-                    sx={{ color: "#388e3c" }}
+                    color="primary"
                   />
                 </TableCell>
-                <TableCell>{row.dnum}</TableCell>
-                <TableCell>{row.dname || "No Name"}</TableCell>
-                <TableCell>{row.supervisorSsn || "No Supervisor"}</TableCell>
-                <TableCell>
-                <Box sx={{ display: "flex", gap: "8px" }}>
-  <Tooltip title="Edit">
-    <IconButton onClick={() => handleOpenModal(row)} sx={{ color: '#388e3c' }}>
-      <EditIcon sx={{ color: '#388e3c' }} />
-    </IconButton>
-  </Tooltip>
-  <Tooltip title="Delete">
-    <IconButton onClick={() => handleDelete(row.dnum)} sx={{ color: '#d32f2f' }}>
-      <DeleteIcon sx={{ color: '#d32f2f' }} />
-    </IconButton>
-  </Tooltip>
-</Box>
+                <TableCell sx={{ py: 1.5, fontWeight: 500 }}>{row.dnum}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>{row.dname || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5, color: 'text.secondary' }}>
+                  {formatSSN(row.supervisorSsn)}
+                </TableCell>
+                <TableCell sx={{ py: 1.5 }}>{row.supervisorName || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5, color: 'text.secondary' }}>
+                  {formatDate(row.created_at)}
+                </TableCell>
+                <TableCell sx={{ py: 1.5 }}>{row.created_by || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5, color: 'text.secondary' }}>
+                  {formatDate(row.lastModified)}
+                </TableCell>
+                <TableCell sx={{ py: 1.5 }}>{row.lastModified_by || "—"}</TableCell>
+                <TableCell sx={{ py: 1.5 }}>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <IconButton 
+                      onClick={() => handleOpenModal(row)}
+                      sx={{ 
+                        color: '#4CAF50',
+                        '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
+                      }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton 
+                      onClick={() => handleDelete(row.dnum)}
+                      sx={{ 
+                        color: 'rgb(189 25 25)',
+                        '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
+                      }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <TablePagination
-      rowsPerPageOptions={[5, 10, 15]}
-      component="div"
-      count={props.data.totalPages * (props.data.page_size || 10)} // Fallback to 10 if page_size is undefined
-      rowsPerPage={props.data.page_size || 10} // Fallback to 10 if page_size is undefined
-      page={props.data.page_number || 0} // Fallback to 0 if page_number is undefined
-      onPageChange={(event, newPage) => props.onPageChange(newPage)}
-      onRowsPerPageChange={(event) => props.onRowsPerPageChange(parseInt(event.target.value, 10))}
-      sx={{ mt: 2 }}
-    />
 
-      {/* Add/Edit Department Modal */}
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={props.data.totalPages * (props.data.page_size || 10)}
+        rowsPerPage={props.data.page_size || 10}
+        page={props.data.page_number || 0}
+        onPageChange={(event, newPage) => props.onPageChange(newPage)}
+        onRowsPerPageChange={(event) => props.onRowsPerPageChange(parseInt(event.target.value, 10))}
+        sx={{
+          mt: 2,
+          '& .MuiTablePagination-toolbar': { px: 0 },
+          '& .MuiTablePagination-actions': { ml: 2 }
+        }}
+      />
+
+      {/* Modal Dialog */}
       <Dialog
         open={openModal}
         onClose={handleCloseModal}
         PaperProps={{
           sx: {
-            borderRadius: "16px",
-            minWidth: "450px",
-            backgroundColor: "#ffffff",
-            boxShadow: "0px 15px 30px rgba(0, 0, 0, 0.1)",
-            padding: "1.5rem",
-          },
+            borderRadius: "12px",
+            width: "100%",
+            maxWidth: "500px",
+            boxShadow: "0px 12px 24px -12px rgba(0, 0, 0, 0.1)",
+            p: 3
+          }
         }}
       >
         <DialogTitle sx={{
-          fontWeight: "600",
-          textAlign: "center",
-          fontSize: "1.25rem",
-          color: "#333",
-          paddingBottom: "1rem",
+          typography: 'h6',
+          px: 0,
+          pt: 0,
+          pb: 2,
+          fontWeight: 600
         }}>
-          {isEditMode ? "Edit Department" : "Add New Department"}
+          {isEditMode ? "Edit Department" : "New Department"}
         </DialogTitle>
 
-        <DialogContent sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-          padding: "0",
-        }}>
-          <TextField
-            fullWidth
-            label="Department Number"
-            name="dnum"
-            variant="outlined"
-            size="small"
-            value={newDepartment.dnum}
-            onChange={handleChange}
-            inputProps={{
-              inputMode: "numeric", // Restrict input to numeric values
-              pattern: "[0-9]*", // Only allow digits
-            }}
-            sx={{
-              marginBottom: "0.5rem",
-            }}
-          />
+        <DialogContent sx={{ px: 0, py: 1 }}>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Department Number"
+              name="dnum"
+              variant="outlined"
+              size="small"
+              value={newDepartment.dnum}
+              onChange={handleChange}
+              inputProps={{ pattern: "[0-9]*" }}
+            />
 
-          <TextField
-            fullWidth
-            label="Department Name"
-            name="dname"
-            variant="outlined"
-            size="small"
-            value={newDepartment.dname}
-            onChange={handleChange}
-            sx={{
-              marginBottom: "0.5rem",
-              borderRadius: "12px",
-            }}
-          />
+            <TextField
+              fullWidth
+              label="Department Name"
+              name="dname"
+              variant="outlined"
+              size="small"
+              value={newDepartment.dname}
+              onChange={handleChange}
+            />
 
-          <TextField
-            fullWidth
-            label="Supervisor SSN"
-            name="supervisorSsn"
-            variant="outlined"
-            size="small"
-            value={newDepartment.supervisorSsn}
-            onChange={handleChange}
-            inputProps={{
-              inputMode: "numeric", // Restrict input to numeric values
-              pattern: "[0-9]*", // Only allow digits
-            }}
-            sx={{
-              marginBottom: "0.5rem",
-              borderRadius: "12px",
-            }}
-          />
+            <TextField
+              fullWidth
+              label="Supervisor SSN"
+              name="supervisorSsn"
+              variant="outlined"
+              size="small"
+              value={newDepartment.supervisorSsn}
+              onChange={handleChange}
+              inputProps={{ pattern: "[0-9]*" }}
+            />
 
-          <TextField
-            fullWidth
-            label="Start Date"
-            name="mgsStartDate"
-            type="datetime-local"
-            value={newDepartment.mgsStartDate}
-            onChange={handleChange}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            sx={{
-              marginBottom: "0.5rem",
-              borderRadius: "12px",
-            }}
-          />
+            <TextField
+              fullWidth
+              label="Start Date"
+              name="mgsStartDate"
+              type="datetime-local"
+              value={newDepartment.mgsStartDate}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Box>
         </DialogContent>
 
-        <DialogActions sx={{
-          padding: "0.75rem",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "1rem",
-        }}>
+        <DialogActions sx={{ px: 0, pt: 2 }}>
           <Button
             onClick={handleCloseModal}
-            color="secondary"
             sx={{
-              borderRadius: "8px",
-              padding: "0.5rem 1.25rem",
-              textTransform: "none",
-              backgroundColor: "#f5f5f5",
-              "&:hover": { backgroundColor: "#e0e0e0" },
+              color: 'text.secondary',
+              px: 3,
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "action.hover" }
             }}
           >
             Cancel
           </Button>
-
           <Button
             onClick={handleSubmit}
-            color="success"
             sx={{
-              borderRadius: "8px",
-              padding: "0.5rem 1.25rem",
-              textTransform: "none",
-              backgroundColor: "#e8f3e9",
-              "&:hover": { backgroundColor: "#e0e0e0" },
+              backgroundColor: "#4CAF50",
+              color: "#fff",
+              px: 3,
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "#43A047" }
             }}
           >
-            {isEditMode ? "Update" : "Add"} Department
+            {isEditMode ? "Update" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>

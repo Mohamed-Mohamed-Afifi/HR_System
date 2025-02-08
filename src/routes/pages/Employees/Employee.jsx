@@ -1,37 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-// import { filterEmployee, getAllEmployees } from "../../../../feathers/Employees/EmployeeActions";
+import { getAllEmployees } from "../../../feathers/Employee/EmployeeActions";
 import EmployeeTable from "./components/EmployeeTable";
 import { CircularProgress, Alert, Box } from "@mui/material";
-import { getAllEmployees } from "../../../feathers/Employee/EmployeeActions";
 
 export const Employee = () => {
-  const allPagedEmps = useSelector((state) => state.emp.empPaged);
-  const loading = useSelector((state) => state.emp.loading);
-  const error = useSelector((state) => state.emp.err);
-
   const dispatch = useDispatch();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { empPaged: pagedData, loading, error } = useSelector((state) => state.emp);
+  
+  // Pagination state
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [employees, setEmployees] = useState([]);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
-    fetchEmployees();
-  }, [page, rowsPerPage]);
-
-  const fetchEmployees = () => {
     const pageParams = {
       pageNum: page,
       pageSize: rowsPerPage,
     };
     dispatch(getAllEmployees(pageParams));
-  };
+  }, [page, rowsPerPage, refreshTrigger, dispatch]);
 
-  useEffect(() => {
-    if (allPagedEmps && allPagedEmps.employees) {
-      setEmployees(allPagedEmps.employees);
-    }
-  }, [allPagedEmps]);
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
@@ -39,63 +31,50 @@ export const Employee = () => {
 
   const handleRowsPerPageChange = (newRowsPerPage) => {
     setRowsPerPage(newRowsPerPage);
-    setPage(0);
-  };
-
-  const handleUpdateEmployees = (newEmployee, isEditMode) => {
-    if (isEditMode) {
-      const updatedEmployees = employees.map((emp) =>
-        emp.ssn === newEmployee.ssn ? newEmployee : emp
-      );
-      setEmployees(updatedEmployees);
-    } else {
-      setEmployees((prevEmployees) => [...prevEmployees, newEmployee]);
-    }
-  };
-
-  const handleDeleteEmployee = (ssn) => {
-    setEmployees((prevEmployees) =>
-      prevEmployees.filter((emp) => emp.ssn !== ssn)
-    );
+    setPage(0); // Reset to first page when page size changes
   };
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
+      <Box sx={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: 300 
+      }}>
+        <CircularProgress size={60} thickness={4} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ width: "100%", marginTop: 2 }}>
-        <Alert severity="error">{error}</Alert>
+      <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+        <Alert severity="error" sx={{ borderRadius: 2 }}>
+          Error loading employees: {error}
+        </Alert>
       </Box>
     );
   }
 
   return (
-    <div>
+    // <Box sx={{ 
+    //   maxWidth: 1440, 
+    //   mx: 'auto', 
+    //   p: { xs: 2, md: 4 },
+    //   backgroundColor: 'background.paper'
+    // }}>
       <EmployeeTable
         data={{
-          employees: employees,
+          employees: pagedData?.employees || [],
           page_number: page,
           page_size: rowsPerPage,
-          totalPages: allPagedEmps.totalPages,
+          totalPages: pagedData?.totalPages || 0,
         }}
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
-        onUpdateEmployees={handleUpdateEmployees}
-        onDeleteEmployee={handleDeleteEmployee}
+        onRefresh={handleRefresh}
       />
-    </div>
+    // </Box>
   );
 };

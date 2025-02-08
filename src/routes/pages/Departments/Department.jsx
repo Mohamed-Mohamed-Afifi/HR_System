@@ -13,7 +13,7 @@ export const Department = () => {
   const [page, setPage] = useState(0); // Backend pages are usually zero-indexed
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [departments, setDepartments] = useState([]); // Initialize state with an empty array
-
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   useEffect(() => {
     fetchDepartments();
   }, [page, rowsPerPage]); // Fetch departments whenever page or rows per page changes
@@ -25,13 +25,17 @@ export const Department = () => {
     };
     dispatch(getAllDepartments(pageParams));
   };
-
+  useEffect(() => {
+    fetchDepartments();
+  }, [page, rowsPerPage, refreshTrigger]); // Add refreshTrigger as dependency
   useEffect(() => {
     if (allPagedDepts && allPagedDepts.departments) {
       setDepartments(allPagedDepts.departments); // Update departments state with fetched data
     }
   }, [allPagedDepts]); // Update when allPagedDepts changes
-
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
   const handlePageChange = (newPage) => {
     setPage(newPage);
   };
@@ -101,6 +105,7 @@ export const Department = () => {
         onRowsPerPageChange={handleRowsPerPageChange}
         onUpdateDepartments={handleUpdateDepartments} // Pass the update function
         onDeleteDepartment={handleDeleteDepartment} // Pass the delete function
+        onRefresh={handleRefresh}
       />
     </div>
   );

@@ -6,7 +6,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Toolbar,
   TextField,
   InputAdornment,
   Box,
@@ -18,7 +17,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Tooltip,
   Menu,
   MenuItem,
   Select,
@@ -26,14 +24,11 @@ import {
   FormControl,
   ListItemText,
   Card,
-  Grid,
   Chip,
+  CircularProgress,
   Checkbox
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
+import { Delete, Edit, Search, Add } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   addNewProject, 
@@ -45,14 +40,12 @@ import Swal from "sweetalert2";
 
 const ProjectTable = (props) => {
   const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.project);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchCategories, setSearchCategories] = useState(["ALL"]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const loading=useSelector((state)=>state.project.loading);
-const error=useSelector((state)=>state.project.error);
-
   const [newProject, setNewProject] = useState({
     projectId: "",
     projectName: "",
@@ -62,8 +55,9 @@ const error=useSelector((state)=>state.project.error);
     employees: []
   });
 
-  const availableCategories = ["ALL", "projectId", "projectName", "location", "city", "departmentNumber"];
+  const availableCategories = ["projectId", "projectName", "location", "city", "departmentNumber"];
 
+  // Search functionality
   const handleSearch = (e) => setSearchQuery(e.target.value);
 
   const handleCategoryChange = (event) => {
@@ -73,26 +67,21 @@ const error=useSelector((state)=>state.project.error);
   const constructSearchArgs = () => {
     const searchArgs = {};
     if (searchQuery) {
-      if (searchCategories.includes("ALL")) {
-        availableCategories
-          .filter(category => category !== "ALL")
-          .forEach(category => {
-            searchArgs[category] = searchQuery;
-          });
-      } else {
-        searchCategories.forEach(category => {
-          searchArgs[category] = searchQuery;
-        });
-      }
+      const categories = searchCategories.includes("ALL") 
+        ? availableCategories 
+        : searchCategories;
+      
+      categories.forEach(category => {
+        searchArgs[category] = searchQuery;
+      });
     }
     return searchArgs;
   };
 
   const handleSearchSubmit = async () => {
-    const searchArgs = constructSearchArgs();
     const payload = {
-      searchArgs,
-      pageNumber: props.data?.page_number || 0,
+      searchArgs: constructSearchArgs(),
+      pageNumber: 0,
       pageSize: props.data?.page_size || 10,
     };
 
@@ -104,6 +93,7 @@ const error=useSelector((state)=>state.project.error);
     }
   };
 
+  // Project CRUD operations
   const handleOpenModal = (project = null) => {
     if (project) {
       setNewProject({
@@ -138,37 +128,34 @@ const error=useSelector((state)=>state.project.error);
     }));
   };
 
-//   const validateProject = () => {
-//     const errors = [];
-//     if (!newProject.projectId) errors.push("Project ID is required");
-//     if (!newProject.projectName) errors.push("Project name is required");
-//     if (!newProject.departmentNumber) errors.push("Department number is required");
-//     return errors;
-//   };
+  const validateProject = () => {
+    const errors = [];
+    if (!/^\d+$/.test(newProject.projectId)) errors.push("Valid Project ID is required");
+    if (!newProject.projectName.trim()) errors.push("Project name is required");
+    if (!/^\d+$/.test(newProject.departmentNumber)) errors.push("Valid Department number is required");
+    return errors;
+  };
 
   const handleSubmit = () => {
-    // const errors = validateProject();
-    // if (errors.length > 0) {
-    //   Swal.fire("Validation Error", errors.join("\n"), "error");
-    //   return;
-    // }
+    const errors = validateProject();
+    if (errors.length > 0) {
+      Swal.fire("Validation Error", errors.join("\n"), "error");
+      return;
+    }
 
     const projectData = {
       ...newProject,
       projectId: parseInt(newProject.projectId, 10),
       departmentNumber: parseInt(newProject.departmentNumber, 10),
-      employees: (newProject.employees || []).map(ssn => ({ ssn: parseInt(ssn, 10) }))
+      employees: newProject.employees.map(ssn => ({ ssn: parseInt(ssn, 10) }))
     };
 
     const action = isEditMode ? updateProject : addNewProject;
     dispatch(action(projectData))
-      .then((result) => {
-        // if (!result?.payload?.projectId) throw new Error("Invalid project data");
-        
+      .then(() => {
         Swal.fire("Success", `Project ${isEditMode ? 'updated' : 'added'}!`, "success");
         handleCloseModal();
-        props.onUpdateProjects();
-        props.onPageChange(0);
+        props.onRefresh();
       })
       .catch(error => {
         Swal.fire("Error", error.message || "Operation failed", "error");
@@ -181,13 +168,11 @@ const error=useSelector((state)=>state.project.error);
       text: "This cannot be undone!",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: "#d32f2f",
     }).then((result) => {
       if (result.isConfirmed) {
         dispatch(deleteProject(projectId))
-          .then(() => {
-            props.onDeleteProject();
-            props.onPageChange(0);
-          })
+          .then(() => props.onRefresh())
           .catch(error => Swal.fire("Error", error.message, "error"));
       }
     });
@@ -207,243 +192,357 @@ const error=useSelector((state)=>state.project.error);
   };
 
   return (
-    <Card elevation={3} sx={{ borderRadius: "16px", padding: "1.5rem", backgroundColor: "#f9f9fb" }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+    <Card elevation={0} sx={{
+      borderRadius: "12px",
+      p: 3,
+      backgroundColor: "white",
+      boxShadow: "0px 8px 24px -12px rgba(0, 0, 0, 0.1)",
+      overflowX: 'auto'
+    }}>
+      {/* Toolbar */}
+      <Box sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 2,
+        mb: 3,
+        flexWrap: 'wrap',
+        '& > *': { my: 0.5 }
+      }}>
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
+          startIcon={<Add />}
           sx={{
-            backgroundColor: "#388e3c",
+            backgroundColor: "#4CAF50",
             color: "#fff",
-            "&:hover": { backgroundColor: "#2c6d31" },
-            fontWeight: "bold",
-            borderRadius: "12px",
-            textTransform: "none",
+            "&:hover": { backgroundColor: "#43A047" },
+            borderRadius: "8px",
+            px: 3,
+            textTransform: 'none',
+            fontWeight: 600
           }}
           onClick={() => handleOpenModal()}
         >
           Add Project
         </Button>
 
-        <Box sx={{ display: 'flex', gap: 2, flexGrow: 1, maxWidth: '800px', ml: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Search projects..."
-            variant="outlined"
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "#388e3c" }} />
-                </InputAdornment>
-              ),
-              sx: {
-                borderRadius: "25px",
-                backgroundColor: "#ffffff",
-                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-              }
-            }}
-            value={searchQuery}
-            onChange={handleSearch}
-          />
-          
-          <Button
-            variant="outlined"
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{
-              color: "#2e7d32",
-              fontWeight: "bold",
-              borderRadius: "12px",
-              textTransform: "none",
-              minWidth: '200px'
-            }}
-          >
-            Search Categories
-          </Button>
-          
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-            PaperProps={{ sx: { borderRadius: "12px", mt: 1 } }}
-          >
-            <FormControl sx={{ width: 320, p: 2 }}>
-              <InputLabel>Search Categories</InputLabel>
-              <Select
-                multiple
-                value={searchCategories}
-                onChange={handleCategoryChange}
-                renderValue={(selected) => selected.join(", ")}
-              >
-                {availableCategories.map((category) => (
-                  <MenuItem key={category} value={category}>
-                    <Checkbox checked={searchCategories.includes(category)} />
-                    <ListItemText primary={category} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Menu>
+        <TextField
+          size="small"
+          placeholder="Search projects..."
+          variant="outlined"
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: "action.active" }} />
+              </InputAdornment>
+            ),
+            sx: {
+              borderRadius: "8px",
+              backgroundColor: "background.paper",
+              "& .MuiOutlinedInput-input": { py: '8px' }
+            },
+          }}
+          value={searchQuery}
+          onChange={handleSearch}
+          sx={{ maxWidth: "400px", flex: 1 }}
+        />
 
-          <Button
-            variant="contained"
-            onClick={handleSearchSubmit}
-            sx={{
-              backgroundColor: "#388e3c",
-              color: "#fff",
-              "&:hover": { backgroundColor: "#2c6d31" },
-              fontWeight: "bold",
-              borderRadius: "12px",
-              textTransform: "none",
-            }}
-          >
-            Search
-          </Button>
+        <Button
+          variant="outlined"
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          sx={{
+            color: "text.secondary",
+            borderColor: "divider",
+            borderRadius: "8px",
+            textTransform: "none",
+            px: 3,
+            fontWeight: 500
+          }}
+        >
+          Search Categories
+        </Button>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          PaperProps={{
+            sx: {
+              borderRadius: "8px",
+              boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
+              minWidth: "250px",
+            },
+          }}
+        >
+          <FormControl sx={{ width: "100%", p: 2 }}>
+            <InputLabel>Categories</InputLabel>
+            <Select
+              multiple
+              value={searchCategories}
+              onChange={handleCategoryChange}
+              renderValue={(selected) => selected.join(", ")}
+            >
+              {["ALL", ...availableCategories].map((category) => (
+                <MenuItem key={category} value={category} sx={{ py: 0.5 }}>
+                  <Checkbox
+                    checked={searchCategories.includes(category)}
+                    sx={{ color: "text.secondary", "&.Mui-checked": { color: "#4CAF50" } }}
+                  />
+                  <ListItemText primary={category} sx={{ typography: 'body2' }} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Menu>
+
+        <Button
+          variant="contained"
+          onClick={handleSearchSubmit}
+          sx={{
+            backgroundColor: "#4CAF50",
+            color: "#fff",
+            "&:hover": { backgroundColor: "#43A047" },
+            borderRadius: "8px",
+            px: 3,
+            textTransform: 'none',
+            fontWeight: 600
+          }}
+        >
+          Search
+        </Button>
+      </Box>
+
+      {/* Loading State */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress size={40} thickness={4} />
         </Box>
-      </Toolbar>
+      )}
 
-      <TableContainer component={Paper} sx={{ borderRadius: "12px", mt: 2, boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)" }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#388e3c" }}>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Project ID</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Project Name</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Location</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>City</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Department</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Employees</TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {(props.data?.projects || []).map((project) => (
-              <TableRow key={project?.projectId || Math.random()} hover sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}>
-                <TableCell>{project?.projectId || 'N/A'}</TableCell>
-                <TableCell>{project?.projectName || 'N/A'}</TableCell>
-                <TableCell>{project?.location || 'N/A'}</TableCell>
-                <TableCell>{project?.city || 'N/A'}</TableCell>
-                <TableCell>{project?.departmentNumber || 'N/A'}</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {(project?.employees || []).map((employee, index) => (
-                      <Chip
-                        key={index}
-                        label={employee?.ssn || 'Unknown'}
-                        size="small"
-                      />
-                    ))}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: "flex", gap: "8px" }}>
-                    <Tooltip title="Edit">
-                      <IconButton onClick={() => handleOpenModal(project)} sx={{ color: '#388e3c' }}>
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton onClick={() => handleDelete(project?.projectId)} sx={{ color: '#d32f2f' }}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Error State */}
+      {error && (
+        <Box sx={{ p: 2 }}>
+          <Alert severity="error" sx={{ borderRadius: 2 }}>
+            {error}
+          </Alert>
+        </Box>
+      )}
 
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 15]}
-        component="div"
-        count={(props.data?.totalPages || 0) * (props.data?.page_size || 10)}
-        rowsPerPage={props.data?.page_size || 10}
-        page={props.data?.page_number || 0}
-        onPageChange={(e, newPage) => props.onPageChange(newPage)}
-        onRowsPerPageChange={(e) => props.onRowsPerPageChange(parseInt(e.target.value, 10))}
-        sx={{ mt: 2 }}
-      />
+      {/* Table */}
+      {!loading && !error && (
+        <>
+          <TableContainer 
+            component={Paper} 
+            sx={{ 
+              borderRadius: "8px",
+              border: "1px solid",
+              borderColor: "divider",
+              minWidth: 1200
+            }}
+          >
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  {['Project ID', 'Project Name', 'Location', 'City', 'Department', 'Employees', 'Actions'].map((header) => (
+                    <TableCell 
+                      key={header}
+                      sx={{
+                        backgroundColor: '#FAFAFA',
+                        borderBottom: '2px solid',
+                        borderColor: 'divider',
+                        py: 2,
+                        fontWeight: 600,
+                        color: 'text.primary',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {header}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
 
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 600, textAlign: 'center' }}>
-          {isEditMode ? 'Edit Project' : 'New Project'}
+              <TableBody>
+                {(props.data?.projects || []).map((project) => (
+                  <TableRow 
+                    key={project.projectId} 
+                    hover 
+                    sx={{ 
+                      '&:nth-of-type(even)': { backgroundColor: '#FAFAFA' },
+                      '&:hover': { backgroundColor: '#F5F5F5' }
+                    }}
+                  >
+                    <TableCell sx={{ fontWeight: 500 }}>{project.projectId}</TableCell>
+                    <TableCell>{project.projectName}</TableCell>
+                    <TableCell>{project.location || "—"}</TableCell>
+                    <TableCell>{project.city || "—"}</TableCell>
+                    <TableCell>{project.departmentNumber || "—"}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        {project.employees?.map((employee, index) => (
+                          <Chip
+                            key={index}
+                            label={employee.ssn}
+                            size="small"
+                            sx={{ borderRadius: 1 }}
+                          />
+                        ))}
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <IconButton 
+                          onClick={() => handleOpenModal(project)}
+                          sx={{ 
+                            color: 'text.secondary',
+                            '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
+                          }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => handleDelete(project.projectId)}
+                          sx={{ 
+                            color: 'text.secondary',
+                            '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={(props.data?.totalPages || 0) * (props.data?.page_size || 10)}
+            rowsPerPage={props.data?.page_size || 10}
+            page={props.data?.page_number || 0}
+            onPageChange={(e, newPage) => props.onPageChange(newPage)}
+            onRowsPerPageChange={(e) => props.onRowsPerPageChange(parseInt(e.target.value, 10))}
+            sx={{
+              mt: 2,
+              '& .MuiTablePagination-toolbar': { px: 0 },
+              '& .MuiTablePagination-actions': { ml: 2 }
+            }}
+          />
+        </>
+      )}
+
+      {/* Project Form Modal */}
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        PaperProps={{
+          sx: {
+            borderRadius: "12px",
+            width: "100%",
+            maxWidth: "600px",
+            boxShadow: "0px 12px 24px -12px rgba(0, 0, 0, 0.1)",
+            p: 3
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          typography: 'h6',
+          px: 0,
+          pt: 0,
+          pb: 2,
+          fontWeight: 600
+        }}>
+          {isEditMode ? "Edit Project" : "New Project"}
         </DialogTitle>
-        <DialogContent sx={{ pt: '1rem!important' }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Project ID"
-                name="projectId"
-                value={newProject.projectId}
-                onChange={handleChange}
-                margin="dense"
-                disabled={isEditMode}
-                inputProps={{ inputMode: 'numeric' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Project Name"
-                name="projectName"
-                value={newProject.projectName}
-                onChange={handleChange}
-                margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Location"
-                name="location"
-                value={newProject.location}
-                onChange={handleChange}
-                margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="City"
-                name="city"
-                value={newProject.city}
-                onChange={handleChange}
-                margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Department Number"
-                name="departmentNumber"
-                value={newProject.departmentNumber}
-                onChange={handleChange}
-                margin="dense"
-                inputProps={{ inputMode: 'numeric' }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Employee SSNs (comma separated)"
-                name="employees"
-                value={newProject.employees.join(',')}
-                onChange={(e) => setNewProject(prev => ({
-                  ...prev,
-                  employees: e.target.value.split(',').map(s => s.trim())
-                }))}
-                margin="dense"
-                placeholder="e.g., 1001, 1002"
-              />
-            </Grid>
-          </Grid>
+
+        <DialogContent sx={{ px: 0, py: 1 }}>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Project ID"
+              name="projectId"
+              value={newProject.projectId}
+              onChange={handleChange}
+              required
+              disabled={isEditMode}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
+
+            <TextField
+              fullWidth
+              label="Project Name"
+              name="projectName"
+              value={newProject.projectName}
+              onChange={handleChange}
+              required
+            />
+
+            <TextField
+              fullWidth
+              label="Location"
+              name="location"
+              value={newProject.location}
+              onChange={handleChange}
+            />
+
+            <TextField
+              fullWidth
+              label="City"
+              name="city"
+              value={newProject.city}
+              onChange={handleChange}
+            />
+
+            <TextField
+              fullWidth
+              label="Department Number"
+              name="departmentNumber"
+              value={newProject.departmentNumber}
+              onChange={handleChange}
+              required
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
+
+            <TextField
+              fullWidth
+              label="Employee SSNs (comma separated)"
+              name="employees"
+              value={newProject.employees.join(', ')}
+              onChange={(e) => setNewProject(prev => ({
+                ...prev,
+                employees: e.target.value.split(',').map(s => s.trim())
+              }))}
+              placeholder="e.g., 123456789, 987654321"
+            />
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {isEditMode ? 'Update' : 'Create'}
+
+        <DialogActions sx={{ px: 0, pt: 2 }}>
+          <Button
+            onClick={handleCloseModal}
+            sx={{
+              color: 'text.secondary',
+              px: 3,
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "action.hover" }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            sx={{
+              backgroundColor: "#4CAF50",
+              color: "#fff",
+              px: 3,
+              borderRadius: "6px",
+              "&:hover": { backgroundColor: "#43A047" }
+            }}
+          >
+            {isEditMode ? "Update" : "Create"}
           </Button>
         </DialogActions>
       </Dialog>

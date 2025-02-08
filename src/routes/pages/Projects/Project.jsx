@@ -13,7 +13,9 @@ const Project = () => {
   const fetchProjects = () => {
     dispatch(getAllProjects({ pageNum: page, pageSize }));
   };
-
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
   useEffect(() => {
     fetchProjects();
   }, [page, pageSize]);
@@ -64,6 +66,7 @@ const Project = () => {
         onRowsPerPageChange={handleRowsPerPageChange}
         onUpdateProjects={handleUpdateProjects}
         onDeleteProject={handleDeleteProject}
+        onRefresh={handleRefresh}
       />
     </div>
   );
